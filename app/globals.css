@@ -1,0 +1,138 @@
+:root {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --line: #e8edf4;
+  --text: #344054;
+  --muted: #6b7280;
+  --button: #5f6b7a;
+  --button-hover: #4d5866;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at 20% 0%, #f8fbff 0, var(--bg) 45%);
+  color: var(--text);
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+.page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px 48px;
+}
+
+.container {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.subtitle {
+  margin: 0 0 28px;
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.primaryButton,
+.secondaryButton,
+.shareButton {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.primaryButton,
+.secondaryButton {
+  background: var(--button);
+  color: #fff;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover {
+  background: var(--button-hover);
+}
+
+.result {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 24px;
+  padding: 20px 18px;
+  box-shadow: 0 10px 30px rgba(67, 88, 114, 0.08);
+}
+
+.cardName {
+  margin: 4px 0 14px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.cardImage {
+  width: 100%;
+  max-width: 250px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+}
+
+.message {
+  min-height: 8.5em;
+  margin: 18px 0 0;
+  text-align: left;
+  line-height: 1.9;
+  font-size: 0.96rem;
+  color: #4a5563;
+  white-space: pre-wrap;
+}
+
+.actions {
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.shareButton {
+  background: #fff;
+  color: var(--button);
+  border-color: var(--line);
+}
+
+.shareButton:hover {
+  background: #f8fafc;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+@media (max-width: 380px) {
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .message {
+    font-size: 0.92rem;
+  }
+}
