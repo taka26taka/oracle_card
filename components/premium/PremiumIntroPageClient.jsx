@@ -76,11 +76,6 @@ export default function PremiumIntroPageClient() {
         <p className="mt-3 text-sm leading-7 text-slate-600">
           無料の1枚より一段深く、過去・現在・未来をつないで、今の迷いを具体的な判断に変えます。
         </p>
-        <ul className="mt-4 space-y-2 text-sm text-slate-700">
-          <li className="rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">相手視点で、今の沈黙や距離感の理由を読む</li>
-          <li className="rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">3枚の流れで、次の分岐点を見える化する</li>
-          <li className="rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2">今週の行動を、迷わない1行に落とす</li>
-        </ul>
         {reason === "premium_access_required" && (
           <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
             3枚リーディングの表示には購入完了が必要です。購入後に自動で表示されます。
@@ -88,6 +83,15 @@ export default function PremiumIntroPageClient() {
         )}
 
         <PremiumDiffTable />
+
+        <section className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/55 px-3 py-3">
+          <p className="text-[0.66rem] tracking-[0.14em] text-amber-700">この先で得られること</p>
+          <ul className="mt-2 space-y-2 text-xs text-slate-700">
+            <li className="rounded-lg bg-white/80 px-2.5 py-2">相手の本音の温度が見える</li>
+            <li className="rounded-lg bg-white/80 px-2.5 py-2">流れの分岐点が分かる</li>
+            <li className="rounded-lg bg-white/80 px-2.5 py-2">今週の行動が1行で決まる</li>
+          </ul>
+        </section>
 
         {ready ? (
           <button

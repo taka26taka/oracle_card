@@ -14,6 +14,7 @@ export default function ResultPageClient() {
   const [result, setResult] = useState(null);
   const [titleVisible, setTitleVisible] = useState(false);
   const [bodyVisible, setBodyVisible] = useState(false);
+  const [otherActionsOpen, setOtherActionsOpen] = useState(false);
   const [template, setTemplate] = useState("short");
   const titleRef = useRef(null);
   const measuredRef = useRef(false);
@@ -236,8 +237,17 @@ export default function ResultPageClient() {
       </section>
 
       <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-[0_14px_28px_rgba(0,0,0,0.16)]">
-        <p className="text-center text-[0.62rem] tracking-[0.14em] text-slate-500">OTHER ACTIONS</p>
-        <div className="mt-2 grid gap-2">
+        <button
+          type="button"
+          className="inline-flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-[0.72rem] tracking-[0.12em] text-slate-600"
+          onClick={() => setOtherActionsOpen((prev) => !prev)}
+          aria-expanded={otherActionsOpen}
+          aria-controls="other-actions-panel"
+        >
+          <span>OTHER ACTIONS</span>
+          <span className="text-xs">{otherActionsOpen ? "閉じる" : "開く"}</span>
+        </button>
+        <div id="other-actions-panel" className={`mt-2 grid gap-2 ${otherActionsOpen ? "block" : "hidden"}`}>
         <a
           className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-700"
           href={shareUrl}
