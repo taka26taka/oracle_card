@@ -17,6 +17,30 @@ const logEventApi = (level, message, details = {}) => {
   console.log(JSON.stringify(payload));
 };
 
+const isTrustedAnalyticsRequest = (request) => {
+  const origin = (request.headers.get("origin") || "").trim();
+  const referer = (request.headers.get("referer") || "").trim();
+  const secFetchSite = (request.headers.get("sec-fetch-site") || "").trim().toLowerCase();
+  const expectedOrigin = request.nextUrl.origin;
+  const isDev = process.env.NODE_ENV !== "production";
+
+  if (secFetchSite && !["same-origin", "same-site", "none"].includes(secFetchSite)) {
+    return false;
+  }
+  if (origin && origin !== expectedOrigin) {
+    return false;
+  }
+  if (referer && !referer.startsWith(expectedOrigin)) {
+    return false;
+  }
+
+  const hasContext = Boolean(origin || referer);
+  if (!hasContext && !isDev) {
+    return false;
+  }
+  return true;
+};
+
 export async function GET(request) {
   const unauthorized = requireAdminToken(request);
   if (unauthorized) return unauthorized;
@@ -27,6 +51,15 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  if (!isTrustedAnalyticsRequest(request)) {
+    logEventApi("warn", "rejected_untrusted_request", {
+      origin: request.headers.get("origin") || "",
+      referer: request.headers.get("referer") || "",
+      secFetchSite: request.headers.get("sec-fetch-site") || ""
+    });
+    return NextResponse.json({ error: "forbidden_request_origin" }, { status: 403 });
+  }
+
   try {
     const payload = await request.json();
     const validated = validateAndNormalizeEvent(payload);
