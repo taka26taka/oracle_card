@@ -18,13 +18,21 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const attemptId = typeof body?.attemptId === "string" ? body.attemptId.trim() : "";
+    const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+    const success = body?.success === true;
     if (!attemptId) {
       return NextResponse.json({ error: "attemptId is required" }, { status: 400 });
     }
+    if (!sessionId) {
+      return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
+    }
+    if (!success) {
+      return NextResponse.json({ error: "success flag is required" }, { status: 400 });
+    }
 
     const eventBody = {
-      event: EVENT_NAMES.PURCHASE_COMPLETED,
-      sessionId: body?.sessionId || "unknown",
+      event: EVENT_NAMES.PURCHASE_SUCCESS,
+      sessionId,
       ts: new Date().toISOString(),
       path: "/api/purchase/webhook",
       theme: body?.theme || "",
@@ -35,7 +43,8 @@ export async function POST(request) {
         source: "webhook",
         provider: body?.provider || "",
         externalOrderId: body?.externalOrderId || "",
-        amount: Number.isFinite(body?.amount) ? body.amount : undefined
+        amount: Number.isFinite(body?.amount) ? body.amount : undefined,
+        success: true
       }
     };
 
@@ -45,7 +54,7 @@ export async function POST(request) {
     }
 
     const result = recordEvent(validated.value);
-    if (!result?.recorded && result?.reason === "duplicate_purchase_attempt") {
+    if (!result?.recorded && result?.reason === "duplicate_purchase_success") {
       return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
     }
     if (!result?.recorded) {

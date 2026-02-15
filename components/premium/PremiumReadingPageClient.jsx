@@ -50,6 +50,7 @@ export default function PremiumReadingPageClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             attemptId: premiumAttemptId,
+            sessionId: session?.sessionId || "",
             diagnosisType: session?.lastResult?.diagnosisType || session?.diagnosisType || "",
             theme: session?.lastResult?.theme || session?.diagnosisType || ""
           })

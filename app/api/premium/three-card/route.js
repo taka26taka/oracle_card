@@ -23,7 +23,8 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const attemptId = typeof body?.attemptId === "string" ? body.attemptId.trim() : "";
-    if (!attemptId || !hasCompletedPurchaseAttempt(attemptId)) {
+    const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
+    if (!attemptId || !sessionId || !hasCompletedPurchaseAttempt(attemptId, sessionId)) {
       return NextResponse.json({ error: "premium_access_required" }, { status: 403 });
     }
 

@@ -45,11 +45,6 @@ export default function ResultPageClient() {
       cardId: result.card.id,
       meta: { firstPaintMs, under500: firstPaintMs <= 500 }
     });
-    trackEvent(EVENT_NAMES.RESULT_VIEWED, {
-      theme: result.theme,
-      cardId: result.card.id,
-      meta: { firstPaintMs, under500: firstPaintMs <= 500 }
-    });
 
     measuredRef.current = true;
     setBodyVisible(true);

@@ -20,14 +20,19 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const attemptId = body?.attemptId || "";
+    const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
     if (!attemptId) {
       logPurchaseApi("warn", "missing_attempt_id");
       return NextResponse.json({ error: "attemptId is required" }, { status: 400 });
     }
+    if (!sessionId) {
+      logPurchaseApi("warn", "missing_session_id", { attemptId });
+      return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
+    }
 
     const eventBody = {
       event: EVENT_NAMES.PURCHASE_COMPLETED,
-      sessionId: body?.sessionId || "unknown",
+      sessionId,
       ts: new Date().toISOString(),
       path: "/premium/complete",
       theme: body?.theme || "",
@@ -53,6 +58,14 @@ export async function POST(request) {
     if (!result?.recorded && result?.reason === "invalid_purchase_attempt") {
       logPurchaseApi("warn", "invalid_purchase_attempt", { attemptId });
       return NextResponse.json({ error: "invalid_purchase_attempt" }, { status: 400 });
+    }
+    if (!result?.recorded && result?.reason === "invalid_purchase_session") {
+      logPurchaseApi("warn", "invalid_purchase_session", { attemptId, sessionId });
+      return NextResponse.json({ error: "invalid_purchase_session" }, { status: 400 });
+    }
+    if (!result?.recorded && result?.reason === "missing_purchase_success") {
+      logPurchaseApi("warn", "missing_purchase_success", { attemptId, sessionId });
+      return NextResponse.json({ error: "missing_purchase_success" }, { status: 400 });
     }
     if (!result?.recorded && result?.reason === "expired_purchase_attempt") {
       logPurchaseApi("warn", "expired_purchase_attempt", { attemptId });

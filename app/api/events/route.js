@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDailyDashboardStats, recordEvent } from "../../../lib/analytics/eventStore";
 import { validateAndNormalizeEvent } from "../../../lib/analytics/eventValidation";
 import { requireAdminToken } from "../../../lib/api/adminAuth";
+import { EVENT_NAMES } from "../../../lib/analytics/events";
 
 const logEventApi = (level, message, details = {}) => {
   const payload = {
@@ -34,6 +35,10 @@ export async function POST(request) {
       return NextResponse.json({ error: validated.reason }, { status: 400 });
     }
     const body = validated.value;
+    if (body.event === EVENT_NAMES.PURCHASE_SUCCESS) {
+      logEventApi("warn", "forbidden_event_source", { event: body.event });
+      return NextResponse.json({ error: "forbidden_event_source" }, { status: 403 });
+    }
 
     const result = recordEvent(body);
     if (!result?.recorded && result?.reason === "invalid_payload") {
@@ -55,12 +60,35 @@ export async function POST(request) {
       });
       return NextResponse.json({ error: "expired_purchase_attempt" }, { status: 400 });
     }
+    if (!result?.recorded && result?.reason === "invalid_purchase_session") {
+      logEventApi("warn", "invalid_purchase_session", {
+        event: body.event,
+        attemptId: body?.meta?.attemptId || "",
+        sessionId: body.sessionId
+      });
+      return NextResponse.json({ error: "invalid_purchase_session" }, { status: 400 });
+    }
+    if (!result?.recorded && result?.reason === "missing_purchase_success") {
+      logEventApi("warn", "missing_purchase_success", {
+        event: body.event,
+        attemptId: body?.meta?.attemptId || "",
+        sessionId: body.sessionId
+      });
+      return NextResponse.json({ error: "missing_purchase_success" }, { status: 400 });
+    }
     if (!result?.recorded && result?.reason === "duplicate_purchase_attempt") {
       logEventApi("info", "duplicate_purchase_attempt", {
         event: body.event,
         attemptId: body?.meta?.attemptId || ""
       });
       return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
+    }
+    if (!result?.recorded) {
+      logEventApi("warn", "failed_to_record_event", {
+        reason: result?.reason || "unknown",
+        event: body.event
+      });
+      return NextResponse.json({ error: result?.reason || "failed_to_record_event" }, { status: 400 });
     }
 
     logEventApi("info", "event_recorded", {
