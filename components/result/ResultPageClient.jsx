@@ -8,11 +8,11 @@ import { trackEvent } from "../../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import { buildTrackedNoteUrl, getNoteUrlByDiagnosisType } from "../../lib/monetization/noteMap";
 import PageFrame from "../ui/PageFrame";
-import PremiumCtaCard from "../premium/PremiumCtaCard";
 
 export default function ResultPageClient() {
   const router = useRouter();
   const [result, setResult] = useState(null);
+  const [titleVisible, setTitleVisible] = useState(false);
   const [bodyVisible, setBodyVisible] = useState(false);
   const [template, setTemplate] = useState("short");
   const titleRef = useRef(null);
@@ -28,6 +28,7 @@ export default function ResultPageClient() {
     performance.mark("result_title_measure_start");
     trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.RESULT } });
     setResult(session.lastResult);
+    setTitleVisible(false);
     setBodyVisible(false);
     measuredRef.current = false;
   }, [router]);
@@ -47,10 +48,19 @@ export default function ResultPageClient() {
     });
 
     measuredRef.current = true;
-    setBodyVisible(true);
+    const ritualMs = result?.ritualMeta?.ritualMs || 0;
+    const titleDelay = Math.min(Math.max(Math.round(ritualMs * 0.12), 120), 220);
+    const bodyDelay = titleDelay + 200;
+    const titleTimer = setTimeout(() => setTitleVisible(true), titleDelay);
+    const bodyTimer = setTimeout(() => setBodyVisible(true), bodyDelay);
+
     performance.clearMeasures("result_title_paint");
     performance.clearMarks("result_title_measure_start");
     performance.clearMarks("result_title_rendered");
+    return () => {
+      clearTimeout(titleTimer);
+      clearTimeout(bodyTimer);
+    };
   }, [result]);
 
   const shareUrl = useMemo(() => {
@@ -144,33 +154,52 @@ export default function ResultPageClient() {
 
   return (
     <PageFrame width="max-w-[375px]" top="1.3rem" bottom="1.5rem">
-      <article className="rounded-[1.9rem] border border-indigo-100/80 bg-white/95 p-5 shadow-[0_22px_58px_rgba(15,23,42,0.4)]">
-        <p className="text-center text-[0.68rem] tracking-[0.24em] text-slate-500">FOR YOU TONIGHT</p>
-        <h1 ref={titleRef} className="mt-3 text-center font-serif-jp text-[1.45rem] leading-tight text-slate-800">
+      <article className="rounded-[2rem] border border-amber-300/70 bg-[linear-gradient(170deg,#f6f1ea,#f3ecff)] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+        <p className="text-center text-[0.66rem] tracking-[0.22em] text-amber-700">✦ ORACLE RESULT ✦</p>
+        <h1
+          ref={titleRef}
+          className={`mt-3 text-center font-serif-jp text-[1.52rem] leading-tight text-slate-800 transition duration-500 ${
+            titleVisible ? "opacity-100 translate-y-0" : "translate-y-2 opacity-0"
+          }`}
+        >
           {result.title}
         </h1>
-        <p className="mt-2 text-center text-xs text-slate-500">{THEME_LABELS[result.theme]}</p>
+        <p
+          className={`mt-2 text-center text-xs text-slate-600 transition duration-500 ${
+            titleVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {THEME_LABELS[result.theme]}
+        </p>
 
-        <div className="mt-4 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/70 via-white to-amber-50/70 p-4">
-          <p className="text-[0.67rem] tracking-[0.16em] text-slate-500">スクショ保存フレーム</p>
-          <p className="mt-2 font-serif-jp text-[1.1rem] text-slate-700">{result.card.name}</p>
-          <p className="mt-1 text-xs text-slate-500">{THEME_LABELS[result.theme]} / {toDateText(result.drawnAt)}</p>
-          <p className="mt-3 text-sm leading-6 text-slate-600">{result.afterglowLine}</p>
-          <p className="mt-3 text-right text-[0.68rem] tracking-[0.18em] text-slate-400">月灯りのオラクル</p>
+        <div
+          className={`mt-4 rounded-[1.35rem] border border-amber-300/40 bg-[linear-gradient(160deg,#0b1026,#141a3a)] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.3)] transition duration-500 ${
+            titleVisible ? "opacity-100 translate-y-0" : "translate-y-2 opacity-0"
+          }`}
+        >
+          <p className="text-[0.64rem] tracking-[0.16em] text-amber-200">THIS NIGHT'S CARD</p>
+          <p className="mt-2 font-serif-jp text-[1.16rem] text-slate-50">{result.card.name}</p>
+          <p className="mt-1 text-xs text-indigo-100/85">{THEME_LABELS[result.theme]} / {toDateText(result.drawnAt)}</p>
+          <p className="mt-3 text-sm leading-6 text-indigo-100">{result.afterglowLine}</p>
+          <p className="mt-3 text-right text-[0.66rem] tracking-[0.18em] text-amber-200/80">MOONLIGHT ORACLE</p>
         </div>
 
         <div className={`transition duration-500 ${bodyVisible ? "opacity-100" : "opacity-0"}`}>
-          <p className="mt-4 text-sm leading-7 text-slate-600">{result.message}</p>
-          <p className="mt-3 rounded-xl bg-indigo-50/70 px-3 py-2 text-sm text-slate-700">今日の行動: {result.actionTip}</p>
-          <p className="mt-3 rounded-xl bg-amber-50/70 px-3 py-2 text-sm text-slate-600">自分への問い: {result.projectionPrompt}</p>
-          <p className="mt-3 text-sm text-slate-500">余韻: {result.afterglowLine}</p>
-          <p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-            X投稿専用1行: {quoteLine}
+          <p className="mt-4 text-sm leading-7 text-slate-700">{result.message}</p>
+          <p className="mt-3 rounded-xl border border-indigo-200/70 bg-indigo-50/70 px-3 py-2 text-sm text-slate-700">今夜の行動: {result.actionTip}</p>
+          <p className="mt-3 rounded-xl border border-amber-200/70 bg-amber-50/70 px-3 py-2 text-sm text-slate-700">自分への問い: {result.projectionPrompt}</p>
+          <p className="mt-3 rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-sm text-slate-700">
+            余韻メモ: {result.afterglowLine}
+          </p>
+          <p className="mt-3 rounded-xl border border-slate-200 bg-white/85 px-3 py-2 text-sm text-slate-700">
+            共有用1行: {quoteLine}
           </p>
         </div>
       </article>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="rounded-2xl border border-amber-200/70 bg-white/95 p-3 shadow-[0_14px_32px_rgba(0,0,0,0.2)]">
+        <p className="text-center text-[0.64rem] tracking-[0.14em] text-slate-500">SHARE STYLE</p>
+        <div className="mt-2 grid grid-cols-3 gap-2">
         {[
           ["short", "short"],
           ["emotional", "emotional"],
@@ -182,23 +211,33 @@ export default function ResultPageClient() {
             key={key}
             type="button"
             className={`rounded-full border px-3 py-2 text-xs ${
-              template === key ? "border-rose-300 bg-rose-50 text-slate-700" : "border-slate-200 bg-white text-slate-500"
+              template === key ? "border-amber-300 bg-amber-100 text-slate-700" : "border-slate-200 bg-white text-slate-500"
             }`}
             onClick={() => setTemplate(key)}
           >
             {label}
           </button>
         ))}
+        </div>
       </div>
 
-      <div className="grid gap-2">
+      <section className="rounded-2xl border border-amber-300/50 bg-[linear-gradient(165deg,#0b1026,#141a3a)] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <p className="text-center text-[0.66rem] tracking-[0.2em] text-amber-200/90">NEXT STEP</p>
+        <p className="mt-2 text-center text-sm text-indigo-100">ここから核心に進む準備ができています。</p>
+        <div className="mt-3">
         <button
           type="button"
-          className="min-h-11 w-full rounded-full border border-indigo-300 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(79,70,229,0.45)]"
+          className="min-h-11 w-full rounded-full border border-amber-300 bg-gradient-to-r from-indigo-700 via-violet-700 to-indigo-900 px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
           onClick={openPremiumIntro}
         >
-          あなた専用の3枚リーディングへ
+          あなた専用の3枚リーディングを見る
         </button>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-[0_14px_28px_rgba(0,0,0,0.16)]">
+        <p className="text-center text-[0.62rem] tracking-[0.14em] text-slate-500">OTHER ACTIONS</p>
+        <div className="mt-2 grid gap-2">
         <a
           className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-700"
           href={shareUrl}
@@ -225,14 +264,8 @@ export default function ResultPageClient() {
         >
           スクショ保存したくなった
         </button>
-      </div>
-
-      <PremiumCtaCard
-        title="ここから核心に入る"
-        description="過去・現在・未来をつないで読む3枚リーディングで、関係の流れを具体化します。"
-        buttonLabel="3枚リーディングの詳細へ進む"
-        onClick={openPremiumIntro}
-      />
+        </div>
+      </section>
 
       <section className="rounded-xl border border-slate-200 bg-white/85 px-3 py-3">
         <p className="text-xs text-slate-500">補助コンテンツ</p>

@@ -45,3 +45,39 @@ button:focus-visible {
 .font-serif-jp {
   font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
 }
+
+@keyframes ritualDrift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.5px);
+  }
+}
+
+@keyframes ritualFlip {
+  0% {
+    transform: perspective(900px) rotateY(0deg) scale(1.03);
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(900px) rotateY(72deg) scale(1.02);
+    opacity: 0;
+  }
+}
+
+.ritual-drift {
+  animation: ritualDrift 2.4s ease-in-out infinite;
+}
+
+.ritual-flip {
+  animation: ritualFlip 0.45s ease forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ritual-drift,
+  .ritual-flip {
+    animation: none;
+  }
+}
