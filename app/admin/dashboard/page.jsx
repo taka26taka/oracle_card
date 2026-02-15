@@ -26,6 +26,7 @@ const metricLabels = {
   premium_checkout_clicked: "premium_checkout_clicked",
   premium_reading_viewed: "premium_reading_viewed",
   premium_three_card_generated: "premium_three_card_generated",
+  premium_access_denied: "premium_access_denied",
   share_clicked: "share_clicked",
   note_click: "note_click",
   purchase_completed: "purchase_completed"
