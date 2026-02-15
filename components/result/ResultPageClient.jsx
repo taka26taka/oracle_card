@@ -6,7 +6,7 @@ import { buildQuoteLine, buildShareText, THEME_LABELS, toDateText } from "../../
 import { getSessionState, setPremiumIntent } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
-import { getNoteUrlByDiagnosisType } from "../../lib/monetization/noteMap";
+import { buildTrackedNoteUrl, getNoteUrlByDiagnosisType } from "../../lib/monetization/noteMap";
 import PageFrame from "../ui/PageFrame";
 import PremiumCtaCard from "../premium/PremiumCtaCard";
 
@@ -85,7 +85,14 @@ export default function ResultPageClient() {
 
   const noteUrl = useMemo(() => {
     if (!result) return "https://note.com/";
-    return getNoteUrlByDiagnosisType(result.diagnosisType || result.theme);
+    const session = getSessionState();
+    const baseUrl = getNoteUrlByDiagnosisType(result.diagnosisType || result.theme);
+    return buildTrackedNoteUrl(baseUrl, {
+      diagnosisType: result.diagnosisType || result.theme,
+      sessionId: session?.sessionId || "unknown",
+      source: "result_secondary",
+      cardId: result.card.id
+    });
   }, [result]);
 
   const onShare = () => {
@@ -132,7 +139,8 @@ export default function ResultPageClient() {
       meta: {
         source: "result_secondary",
         diagnosisType: result.diagnosisType || result.theme,
-        sessionId
+        sessionId,
+        target: noteUrl
       }
     });
   };
