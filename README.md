@@ -25,14 +25,30 @@ Next.js(App Router) で構築し、スマホ表示を前提に、余白を活か
 ```text
 app/
   api/reading/route.js      # 占いメッセージ API
+  api/events/route.js       # イベント受信 API
+  deep/page.js              # deep画面エントリ
+  draw/page.js              # 1枚引き画面
   globals.css               # ベーススタイル/背景/フォント
   layout.js                 # メタ情報/viewport/Tailwind CDN読み込み
-  page.js                   # 1枚引き画面（Tailwind UI）
+  page.js                   # トップ画面（診断4択）
+  premium/intro/page.jsx    # 有料導線紹介ページ
+  result/page.js            # 結果画面エントリ
+components/
+  deep/DeepPageClient.jsx
+  premium/PremiumCtaCard.jsx
+  premium/PremiumDiffTable.jsx
+  premium/PremiumIntroPageClient.jsx
+  result/ResultPageClient.jsx
+  ui/PageFrame.jsx
 data/
   cards.json                # 20枚カードデータ
 lib/
   ai/oracleMessage.js       # AI生成ロジック
+  analytics/trackEvent.js   # イベント送信
   cards.js                  # カード読み込み/画像生成/ランダム抽選
+  reading/generateViralTitle.js
+  reading/viralCopy.js
+  session/oracleSession.js  # localStorage状態管理
 docs/
   review-spec.md            # AI実装レビュー仕様書
 ```
@@ -40,9 +56,14 @@ docs/
 ## ドキュメント
 
 - レビュー仕様書: `docs/review-spec.md`
+- アーキテクチャ概要: `docs/architecture-overview.md`
 - システム全体像: `docs/system-overview.md`
 - ファイルマップ: `docs/file-map.md`
 - 編集ルール: `docs/edit-rules.md`
+- state設計: `docs/state-design.md`
+- 収益導線: `docs/monetization-flow.md`
+- 編集ガイド: `docs/how-to-edit.md`
+- 内部レビュー: `docs/codex-review.md`
 
 ## セットアップ
 
