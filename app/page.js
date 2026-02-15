@@ -72,26 +72,26 @@ export default function Home() {
       : "今夜の恋を、1枚で読む";
 
   return (
-    <main className="min-h-dvh px-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[calc(1.4rem+env(safe-area-inset-top))]">
-      <div className="mx-auto w-full max-w-md space-y-6">
-        <section className="overflow-hidden rounded-[2rem] border border-rose-100/70 bg-white/90 p-6 shadow-[0_24px_64px_rgba(148,163,184,0.22)]">
+    <main className="min-h-dvh px-4 pb-[calc(2.8rem+env(safe-area-inset-bottom))] pt-[calc(1.5rem+env(safe-area-inset-top))]">
+      <div className="mx-auto w-full max-w-md space-y-10">
+        <section className="overflow-hidden rounded-[2rem] border border-indigo-100/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(244,244,255,0.96))] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.45)]">
           <p className="text-center text-[0.68rem] tracking-[0.28em] text-slate-500">MOONLIGHT ORACLE</p>
-          <h1 className="mt-3 text-center font-serif-jp text-[1.9rem] leading-tight text-slate-800">{heroCopy}</h1>
-          <p className="mx-auto mt-3 max-w-[18rem] text-center text-sm leading-7 text-slate-600">
-            無料で1枚。あなたの今の恋愛状態に合わせて、核心と次の行動を返します。
+          <h1 className="mt-3 text-center font-serif-jp text-[1.95rem] leading-tight text-slate-800">{heroCopy}</h1>
+          <p className="mx-auto mt-3 max-w-[18.5rem] text-center text-sm leading-7 text-slate-600">
+            無料で1回診断。今の恋の空気を言語化し、次に取る行動まで短く整理します。
           </p>
-
-          <div className="mt-5 grid gap-2">
+          <div className="mt-5 grid gap-3">
             {diagnosisOptions.map((item) => {
               const active = diagnosisType === item.key;
               return (
                 <button
                   key={item.key}
                   type="button"
+                  aria-pressed={active}
                   className={`w-full rounded-2xl border px-4 py-3 text-left text-sm transition ${
                     active
-                      ? "border-rose-300 bg-rose-50 text-slate-700 shadow-[0_8px_22px_rgba(251,113,133,0.18)]"
-                      : "border-slate-200 bg-white text-slate-600"
+                      ? "border-indigo-300 bg-indigo-50/80 text-slate-700 shadow-[0_10px_26px_rgba(79,70,229,0.2)]"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                   }`}
                   onClick={() => handleDiagnosisSelect(item.key)}
                 >
@@ -101,88 +101,79 @@ export default function Home() {
               );
             })}
           </div>
-
           <button
             type="button"
-            className={`mt-5 w-full rounded-full px-6 py-4 text-[0.98rem] font-medium transition ${
+            className={`mt-6 min-h-11 w-full rounded-full px-6 py-3.5 text-[1rem] font-semibold transition ${
               diagnosisType
-                ? "border border-rose-200/70 bg-gradient-to-r from-rose-100 via-white to-amber-100 text-slate-700 shadow-[0_12px_28px_rgba(148,163,184,0.2)] active:scale-[0.99]"
+                ? "border border-indigo-300 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-[0_16px_34px_rgba(79,70,229,0.42)] active:scale-[0.99]"
                 : "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
             }`}
             onClick={goDraw}
             disabled={!diagnosisType}
           >
-            無料で1枚引く
+            無料で診断する
           </button>
-          {activeDiagnosisLabel && <p className="mt-2 text-center text-xs text-slate-500">選択中: {activeDiagnosisLabel}</p>}
+          {activeDiagnosisLabel && <p className="mt-3 text-center text-xs text-slate-500">選択中: {activeDiagnosisLabel}</p>}
         </section>
 
-        <section className="rounded-[1.7rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_40px_rgba(148,163,184,0.14)]">
-          <h2 className="font-serif-jp text-xl text-slate-800">こんな夜に読まれています</h2>
-          <div className="mt-3 grid gap-2 text-sm text-slate-600">
-            <p className="rounded-xl bg-slate-50 px-3 py-2">未読が続いて、追うべきか迷う</p>
-            <p className="rounded-xl bg-slate-50 px-3 py-2">両想いっぽいのに、確信が持てない</p>
-            <p className="rounded-xl bg-slate-50 px-3 py-2">復縁したいけど、連絡の温度が読めない</p>
+        <section className="rounded-[1.8rem] border border-slate-200/80 bg-white/95 p-5 shadow-[0_18px_48px_rgba(15,23,42,0.3)]">
+          <h2 className="font-serif-jp text-[1.28rem] text-slate-800">診断の流れ</h2>
+          <div className="mt-3 grid gap-3 text-sm text-slate-600">
+            {[
+              "1. テーマを選んで、1タップでカードを引く",
+              "2. 結果で今の関係性と行動のヒントを確認する",
+              "3. さらに必要なら3枚リーディングで核心に進む"
+            ].map((step) => (
+              <p key={step} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                {step}
+              </p>
+            ))}
           </div>
         </section>
 
-        <section className="rounded-[1.7rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_40px_rgba(148,163,184,0.14)]">
-          <h2 className="font-serif-jp text-xl text-slate-800">無料1枚で分かること</h2>
-          <div className="mt-3 space-y-2 text-sm text-slate-600">
-            <p className="rounded-xl border border-rose-100 bg-rose-50/45 px-3 py-2">1. いまの関係で起きている核心</p>
-            <p className="rounded-xl border border-amber-100 bg-amber-50/45 px-3 py-2">2. 今夜か明日に取るべき行動</p>
-            <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">3. Xに貼れる1行要約</p>
-          </div>
-        </section>
-
-        <section className="rounded-[1.7rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_40px_rgba(148,163,184,0.14)]">
-          <h2 className="font-serif-jp text-xl text-slate-800">結果サンプル</h2>
-          <article className="mt-3 rounded-2xl border border-rose-100 bg-gradient-to-b from-rose-50/50 via-white to-amber-50/45 p-4">
-            <p className="text-[0.68rem] tracking-[0.18em] text-slate-500">SAMPLE</p>
+        <section className="rounded-[1.8rem] border border-slate-200/80 bg-white/95 p-5 shadow-[0_18px_48px_rgba(15,23,42,0.28)]">
+          <h2 className="font-serif-jp text-[1.28rem] text-slate-800">結果イメージ</h2>
+          <article className="mt-3 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/70 via-white to-amber-50/70 p-4">
+            <p className="text-[0.68rem] tracking-[0.18em] text-slate-500">SAMPLE RESULT</p>
             <p className="mt-2 font-serif-jp text-[1.08rem] text-slate-700">月のしずく</p>
             <p className="mt-2 text-sm leading-7 text-slate-600">
               この沈黙は終わりではなく、間合いを測る時間です。今は結論を急がず、短く整えた一通が距離を戻します。
             </p>
-            <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-sm text-slate-700">今日の行動: 明日の同じ時間に一通だけ送る</p>
+            <p className="mt-3 rounded-lg bg-white/80 px-3 py-2 text-sm text-slate-700">今日の行動: 明日の同じ時間に一通だけ送る</p>
           </article>
         </section>
 
-        <section className="rounded-[1.7rem] border border-amber-200/70 bg-gradient-to-b from-amber-50/70 to-white p-5 shadow-[0_16px_40px_rgba(148,163,184,0.16)]">
-          <h2 className="font-serif-jp text-xl text-slate-800">もっと深く知りたい人へ</h2>
-          <p className="mt-2 text-sm leading-7 text-slate-600">
-            無料1枚のあと、過去・現在・未来の3枚リーディング（note）へ進めます。相手視点と今週の行動まで整理します。
-          </p>
-          <p className="mt-3 text-xs text-slate-500">無料1枚 → 結果確認 → 3枚リーディング購入</p>
+        <section className="rounded-[1.8rem] border border-amber-200/80 bg-[linear-gradient(170deg,rgba(255,251,235,0.98),rgba(255,255,255,0.98))] p-5 shadow-[0_20px_52px_rgba(15,23,42,0.3)]">
+          <h2 className="font-serif-jp text-[1.28rem] text-slate-800">ここから核心に入る</h2>
+          <ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <li className="rounded-xl border border-amber-200 bg-white px-3 py-2">相手視点で「なぜ迷っているか」を整理</li>
+            <li className="rounded-xl border border-amber-200 bg-white px-3 py-2">過去・現在・未来を3枚でつないで読む</li>
+            <li className="rounded-xl border border-amber-200 bg-white px-3 py-2">今週の行動を具体的な1行に落とす</li>
+          </ul>
+          <p className="mt-3 text-xs text-slate-500">無料診断の後に、任意で進めます。</p>
+        </section>
+
+        <section className="rounded-[1.8rem] border border-indigo-200 bg-white/95 p-5 shadow-[0_20px_52px_rgba(15,23,42,0.35)]">
+          <h2 className="font-serif-jp text-[1.2rem] text-slate-800">準備ができたら、まずは無料診断から</h2>
           <button
             type="button"
-            className={`mt-4 w-full rounded-full px-6 py-3.5 text-sm font-medium transition ${
+            className={`mt-4 min-h-11 w-full rounded-full px-6 py-3.5 text-base font-semibold transition ${
               diagnosisType
-                ? "border border-amber-200 bg-white text-slate-700 shadow-[0_10px_26px_rgba(148,163,184,0.18)] active:scale-[0.99]"
+                ? "border border-indigo-300 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-[0_18px_34px_rgba(79,70,229,0.45)] active:scale-[0.99]"
                 : "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
             }`}
             onClick={goDraw}
             disabled={!diagnosisType}
           >
-            まず無料の1枚を受け取る
+            無料で診断を開始する
           </button>
-        </section>
-
-        <section className="rounded-[1.7rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_40px_rgba(148,163,184,0.14)]">
-          <h2 className="font-serif-jp text-xl text-slate-800">FAQ</h2>
-          <div className="mt-3 space-y-3 text-sm leading-7 text-slate-600">
-            <div className="rounded-xl bg-slate-50 px-3 py-2">
-              <p className="font-medium text-slate-700">Q. 本当に無料ですか？</p>
-              <p>A. 1枚リーディングは無料です。購入は任意です。</p>
-            </div>
-            <div className="rounded-xl bg-slate-50 px-3 py-2">
-              <p className="font-medium text-slate-700">Q. しつこい課金誘導はありますか？</p>
-              <p>A. ありません。結果画面で任意の案内が表示されるのみです。</p>
-            </div>
-            <div className="rounded-xl bg-slate-50 px-3 py-2">
-              <p className="font-medium text-slate-700">Q. 登録は必要ですか？</p>
-              <p>A. 不要です。ブラウザ上でそのまま使えます。</p>
-            </div>
+          <div className="mt-5 space-y-2 text-xs leading-6 text-slate-500">
+            <p>1枚リーディングは無料です。購入は任意です。</p>
+            <p>登録不要・ブラウザでそのまま利用できます。</p>
           </div>
+          <p className="mt-4 border-t border-slate-200 pt-3 text-center text-[0.68rem] tracking-[0.2em] text-slate-400">
+            MOONLIGHT ORACLE
+          </p>
         </section>
       </div>
     </main>

@@ -7,16 +7,39 @@ body {
   margin: 0;
   padding: 0;
   background:
-    radial-gradient(110% 70% at 10% 0%, rgba(254, 242, 242, 0.9), rgba(255, 255, 255, 0) 60%),
-    radial-gradient(100% 80% at 90% 10%, rgba(255, 247, 237, 0.85), rgba(255, 255, 255, 0) 60%),
-    #fff;
-  color: #334155;
+    radial-gradient(120% 80% at 12% -10%, rgba(129, 140, 248, 0.24), rgba(15, 23, 42, 0) 60%),
+    radial-gradient(120% 90% at 88% -20%, rgba(217, 70, 239, 0.16), rgba(15, 23, 42, 0) 58%),
+    linear-gradient(160deg, #0f172a 0%, #111827 55%, #1e1b4b 100%);
+  color: #e2e8f0;
   font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(226, 232, 240, 0.12) 1px, transparent 1px),
+    radial-gradient(rgba(226, 232, 240, 0.08) 1px, transparent 1px);
+  background-size:
+    30px 30px,
+    44px 44px;
+  background-position:
+    0 0,
+    22px 22px;
+  opacity: 0.2;
 }
 
 a,
 button {
   -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
 }
 
 .font-serif-jp {

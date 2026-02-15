@@ -104,22 +104,23 @@ export default function DrawPage() {
 
   return (
     <main className="min-h-dvh px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))]">
-      <section className="mx-auto w-full max-w-md rounded-[2rem] border border-rose-100 bg-white/90 p-6 shadow-[0_24px_64px_rgba(148,163,184,0.2)]">
+      <section className="mx-auto w-full max-w-md rounded-[2rem] border border-indigo-100/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.98),rgba(244,244,255,0.96))] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.45)]">
         <p className="text-center text-xs tracking-[0.22em] text-slate-500">DRAW</p>
         <h1 className="mt-3 text-center font-serif-jp text-2xl text-slate-700">今夜の1枚を引く</h1>
         <p className="mt-3 text-center text-sm text-slate-500">テーマ: {THEME_LABELS[theme] || "-"}</p>
+        <p className="mt-2 text-center text-sm leading-7 text-slate-600">カードを引いた後、結果画面で行動のヒントまで確認できます。</p>
 
         <button
           type="button"
           disabled={loading || !theme}
-          className={`mt-8 w-full rounded-full px-6 py-4 text-base transition ${
+          className={`mt-8 min-h-11 w-full rounded-full px-6 py-3.5 text-base font-semibold transition ${
             loading
               ? "cursor-wait border border-slate-200 bg-slate-100 text-slate-400"
-              : "border border-rose-200/70 bg-gradient-to-r from-rose-100 via-white to-amber-100 text-slate-700 shadow-[0_12px_28px_rgba(148,163,184,0.2)] active:scale-[0.99]"
+              : "border border-indigo-300 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-[0_16px_34px_rgba(79,70,229,0.42)] active:scale-[0.99]"
           }`}
           onClick={handleDraw}
         >
-          {loading ? "メッセージを整えています..." : "1タップで引く"}
+          {loading ? "メッセージを整えています..." : "1タップで診断結果を見る"}
         </button>
       </section>
     </main>
