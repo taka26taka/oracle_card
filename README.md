@@ -56,6 +56,7 @@ docs/
 ## ドキュメント
 
 - レビュー仕様書: `docs/review-spec.md`
+- プロジェクト全体マップ: `docs/project-map.md`
 - アーキテクチャ概要: `docs/architecture-overview.md`
 - システム全体像: `docs/system-overview.md`
 - ファイルマップ: `docs/file-map.md`
