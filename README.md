@@ -162,6 +162,7 @@ curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?d
 ```
 
 集計レスポンスには `cv`（イベント件数ベース）に加えて `user_cv`（ユニークユーザー数ベース）も含まれます。
+`cv` / `user_cv` には `result_to_deep`, `deep_to_premium_intro`, `checkout_to_purchase_success` も含まれます。
 
 購入Webhook受信（サーバー間）:
 
@@ -169,7 +170,7 @@ curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?d
 curl -X POST "http://localhost:3000/api/purchase/webhook" \
   -H "content-type: application/json" \
   -H "x-webhook-token: change_me" \
-  -d '{"attemptId":"attempt_xxx","sessionId":"s_xxx","provider":"note","externalOrderId":"order_123","amount":1980}'
+  -d '{"attemptId":"attempt_xxx","sessionId":"s_xxx","success":true,"provider":"note","externalOrderId":"order_123","amount":1980}'
 ```
 
 ## Vercel デプロイ
@@ -181,7 +182,7 @@ curl -X POST "http://localhost:3000/api/purchase/webhook" \
    - `OPENAI_MODEL` (任意)
    - `OPENAI_MAX_OUTPUT_TOKENS` (任意)
    - `EVENT_DB_PATH` (任意, 例: `/tmp/oracle-events.sqlite`)
-   - `ANALYTICS_ADMIN_TOKEN` (推奨, 集計API保護用)
+   - `ANALYTICS_ADMIN_TOKEN` (必須推奨: production未設定時は集計APIが503)
    - `NEXT_PUBLIC_EXPERIMENT_LP_COPY` (任意, `1`でLPコピーABを有効化)
    - `PURCHASE_WEBHOOK_TOKEN` (推奨, 購入Webhook認証用)
 4. Deploy

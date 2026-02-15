@@ -8,8 +8,10 @@
 page_view_lp
  -> draw_completed
  -> result_viewed
+ -> deep_dive_opened
  -> premium_intro_viewed
  -> premium_checkout_clicked
+ -> purchase_success
  -> purchase_completed
 ```
 
@@ -55,9 +57,16 @@ AB比較:
 - `result_viewed`
 - `premium_intro_viewed`
 - `premium_checkout_clicked`
+- `purchase_success`
 - `purchase_completed`
 
 互換上 `draw_executed` は集計時に `draw_completed` に正規化されます。
+
+主要CVキー（`cv` / `user_cv`）:
+- `result_to_deep`
+- `deep_to_premium_intro`
+- `checkout_to_purchase_success`
+- `purchase_success_to_purchase_completed`
 
 ## 5. 最低運用ルール
 
@@ -70,4 +79,4 @@ AB比較:
 
 - 集計APIは `ANALYTICS_ADMIN_TOKEN` を設定して保護する
 - 呼び出しヘッダーは `x-admin-token` か `Authorization: Bearer <token>`
-- 未設定時は無認証になるため、本番では必ず設定する
+- `NODE_ENV=production` で未設定の場合は `503` を返す

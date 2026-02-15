@@ -44,8 +44,9 @@ premium導線カード
 ## 購入完了判定
 
 1. `premium_checkout_clicked` に記録済みの `attemptId` が必須  
-2. `purchase_completed` は 48時間以内のみ有効  
-3. 同一 `attemptId` の重複完了は拒否（idempotent）  
+2. Webhookで `purchase_success(success=true)` 済みが必須  
+3. `purchase_completed` は 48時間以内のみ有効  
+4. 同一 `attemptId` の重複完了は拒否（idempotent）  
 
 受信ルート:
 - `POST /api/purchase/complete`（フロント戻り）

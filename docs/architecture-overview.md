@@ -52,7 +52,8 @@ POST /api/premium/three-card        # 購入attempt検証
 /premium/intro で checkoutAttempt 発行
   -> premium_checkout_clicked(attemptId付き) 記録
   -> 外部checkout
-  -> /premium/complete で purchase_completed 記録（または webhook）
+  -> webhookで purchase_success 記録
+  -> /premium/complete で purchase_completed 記録
   -> premiumAccess 付与
   -> /premium/reading で attemptId検証し3枚生成
 ```
