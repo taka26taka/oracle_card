@@ -96,6 +96,7 @@ export default function DrawPage() {
 
     setLastResult(result);
     trackEvent("draw_executed", { theme, cardId: card.id, meta: { delayMs: DRAW_DELAY_MS } });
+    trackEvent("draw_completed", { theme, cardId: card.id, meta: { delayMs: DRAW_DELAY_MS } });
     router.replace("/result");
   };
 

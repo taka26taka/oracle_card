@@ -1,4 +1,11 @@
 import { NextResponse } from "next/server";
+import { getDailyDashboardStats, recordEvent } from "../../../lib/analytics/eventStore";
+
+export async function GET(request) {
+  const date = request.nextUrl.searchParams.get("date") || "";
+  const stats = getDailyDashboardStats(date);
+  return NextResponse.json({ ok: true, stats }, { status: 200 });
+}
 
 export async function POST(request) {
   try {
@@ -7,6 +14,8 @@ export async function POST(request) {
     if (!body?.event) {
       return NextResponse.json({ error: "event is required" }, { status: 400 });
     }
+
+    recordEvent(body);
 
     console.log("[event]", {
       event: body.event,

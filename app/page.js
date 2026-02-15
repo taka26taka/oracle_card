@@ -29,6 +29,7 @@ export default function Home() {
     resetDiagnosisType();
     resetSelectedTheme();
     setDiagnosis("");
+    trackEvent("page_view", { meta: { page: "lp" } });
 
     const revisitInfo = session?.revisitInfo;
     if (revisitInfo?.isRevisit) {
