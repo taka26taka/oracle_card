@@ -22,7 +22,7 @@ export default function PremiumReadingPageClient() {
     }
     const premiumAttemptId = session?.premiumAccess?.attemptId || "";
     if (!premiumAttemptId) {
-      router.replace("/premium/intro");
+      router.replace("/premium/intro?reason=premium_access_required");
       return;
     }
 
@@ -50,6 +50,10 @@ export default function PremiumReadingPageClient() {
           })
         });
         const data = await res.json();
+        if (res.status === 403 && data?.error === "premium_access_required") {
+          if (active) router.replace("/premium/intro?reason=premium_access_required");
+          return;
+        }
         if (!res.ok || !data?.result) throw new Error("failed");
         if (!active) return;
 

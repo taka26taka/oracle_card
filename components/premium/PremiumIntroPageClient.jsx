@@ -15,6 +15,10 @@ export default function PremiumIntroPageClient() {
   const router = useRouter();
   const ready = Boolean(CHECKOUT_URL);
   const session = useMemo(() => getSessionState(), []);
+  const reason = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("reason") || "";
+  }, []);
 
   useEffect(() => {
     if (!session?.lastResult?.card?.id) {
@@ -72,6 +76,11 @@ export default function PremiumIntroPageClient() {
         <p className="mt-2 text-sm leading-7 text-slate-600">
           無料の1枚リーディングより深く、過去・現在・未来の流れをあなた専用に整理します。
         </p>
+        {reason === "premium_access_required" && (
+          <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            3枚リーディングの表示には購入完了が必要です。購入後に自動で表示されます。
+          </p>
+        )}
 
         <PremiumDiffTable />
 
