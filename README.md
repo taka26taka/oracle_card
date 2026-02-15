@@ -65,6 +65,7 @@ docs/
 - 収益導線: `docs/monetization-flow.md`
 - 編集ガイド: `docs/how-to-edit.md`
 - 内部レビュー: `docs/codex-review.md`
+- KPI設計: `docs/kpi-plan.md`
 
 ## セットアップ
 
