@@ -21,6 +21,7 @@ page_view_lp
 - `deep_focus_selected`
 - `premium_reading_viewed`
 - `premium_three_card_generated`
+- `draw_executed.meta.delayMs`（儀式演出時間）
 
 ## 2. 集計API
 
@@ -80,3 +81,19 @@ AB比較:
 - 集計APIは `ANALYTICS_ADMIN_TOKEN` を設定して保護する
 - 呼び出しヘッダーは `x-admin-token` か `Authorization: Bearer <token>`
 - `NODE_ENV=production` で未設定の場合は `503` を返す
+
+## 7. 儀式UXの運用監視
+
+draw演出時間は `draw_executed` の `meta.delayMs` に記録されます。  
+中央値が大きく外れる場合、`/draw` の `holdMin` / `holdRange` を調整します。
+
+目安:
+- 推奨帯: 1,000ms〜1,600ms
+- 900ms未満: 速すぎて価値感が弱くなる可能性
+- 1,800ms超: 待ちが長く離脱しやすい可能性
+
+ローカルDB確認例:
+
+```bash
+node -e "const Database=require('better-sqlite3');const db=new Database('/tmp/oracle-events.sqlite',{readonly:true});const rows=db.prepare(\"SELECT json_extract(meta_json,'$.delayMs') AS delayMs FROM events WHERE event='draw_executed' AND delayMs IS NOT NULL ORDER BY id DESC LIMIT 100\").all();console.log(rows);"
+```

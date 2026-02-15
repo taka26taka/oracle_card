@@ -24,7 +24,14 @@
 
 ### `lastResult`
 - 用途: 1枚結果の全データ
-- 中身: `card`, `title`, `message`, `actionTip`, `afterglowLine`, `drawnAt`, `deepMessage` など
+- 中身: `card`, `title`, `message`, `actionTip`, `afterglowLine`, `drawnAt`, `ritualMeta`, `deepMessage` など
+- 変更タイミング: draw完了時
+
+#### `lastResult.ritualMeta`
+- 用途: draw演出のメタデータをresult演出で再利用する
+- 中身:
+  - `ritualMs`（draw演出〜遷移までの実測ミリ秒）
+  - `drawPhaseDoneAt`（draw完了時刻ISO文字列）
 - 変更タイミング: draw完了時
 
 ### `deepCount`

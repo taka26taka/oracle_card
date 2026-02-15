@@ -85,6 +85,8 @@ docs/
 - 編集ガイド: `docs/how-to-edit.md`
 - 内部レビュー: `docs/codex-review.md`
 - KPI設計: `docs/kpi-plan.md`
+- リリース運用チェック: `docs/release-operations-checklist.md`
+- 次タスク幕ダウン: `docs/next-task-rundown-2026-02-15.md`
 
 ## セットアップ
 
