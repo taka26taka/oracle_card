@@ -5,6 +5,8 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const cardName = body?.cardName;
+    const theme = body?.theme;
+    const deepFocus = body?.deepFocus;
 
     if (!cardName) {
       return NextResponse.json({ error: "cardName is required" }, { status: 400 });
@@ -12,6 +14,8 @@ export async function POST(request) {
 
     const result = await generateOracleMessage({
       cardName,
+      theme,
+      deepFocus,
       apiKey: process.env.OPENAI_API_KEY
     });
 

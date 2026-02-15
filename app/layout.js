@@ -1,4 +1,5 @@
 import "./globals.css";
+import Script from "next/script";
 
 export const metadata = {
   title: "やさしいAIオラクルカード",
@@ -14,7 +15,10 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
+        {children}
+      </body>
     </html>
   );
 }

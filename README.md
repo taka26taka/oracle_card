@@ -1,7 +1,7 @@
 # やさしいAIオラクルカード
 
 初心者向けのシンプルな 1 枚引きオラクルカードサイトです。  
-Next.js(App Router) で構築し、スマホ表示を前提に白ベースで最小構成に整えています。
+Next.js(App Router) で構築し、スマホ表示を前提に、余白を活かした軽いスピリチュアルトーンのUIで整えています。
 
 ## 成果物の範囲
 
@@ -17,6 +17,7 @@ Next.js(App Router) で構築し、スマホ表示を前提に白ベースで最
 
 - Next.js 14 (App Router)
 - React 18
+- Tailwind CSS (CDN版 `cdn.tailwindcss.com` を利用)
 - Node.js 18+ 推奨
 
 ## ディレクトリ構成
@@ -24,15 +25,21 @@ Next.js(App Router) で構築し、スマホ表示を前提に白ベースで最
 ```text
 app/
   api/reading/route.js      # 占いメッセージ API
-  globals.css               # スタイル（スマホ最適含む）
-  layout.js                 # メタ情報/viewport
-  page.js                   # 1枚引き画面
+  globals.css               # ベーススタイル/背景/フォント
+  layout.js                 # メタ情報/viewport/Tailwind CDN読み込み
+  page.js                   # 1枚引き画面（Tailwind UI）
 data/
   cards.json                # 20枚カードデータ
 lib/
   ai/oracleMessage.js       # AI生成ロジック
   cards.js                  # カード読み込み/画像生成/ランダム抽選
+docs/
+  review-spec.md            # AI実装レビュー仕様書
 ```
+
+## ドキュメント
+
+- レビュー仕様書: `docs/review-spec.md`
 
 ## セットアップ
 
@@ -56,6 +63,11 @@ npm run dev
 ```
 
 アクセス: `http://localhost:3000`
+
+## スタイリング補足
+
+- UIはTailwindユーティリティクラス中心で実装しています。
+- 本リポジトリはビルド依存を増やさないため、`app/layout.js` で Tailwind CDN を読み込む構成です。
 
 ## ビルド確認
 

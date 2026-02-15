@@ -1,78 +1,100 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { pickRandomCard } from "../lib/cards";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ensureSession, getSessionState, setSelectedTheme } from "../lib/session/oracleSession";
+import { trackEvent } from "../lib/analytics/trackEvent";
 
 export default function Home() {
-  const [card, setCard] = useState(null);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [theme, setTheme] = useState("");
+  const themes = useMemo(
+    () => [
+      { key: "waiting_love", label: "待ってる恋", hashTag: "#待ってる恋" },
+      { key: "waiting_contact", label: "連絡待ち", hashTag: "#連絡待ち" },
+      { key: "unrequited", label: "片思い", hashTag: "#片思い" },
+      { key: "reconciliation", label: "復縁", hashTag: "#復縁したい" }
+    ],
+    []
+  );
 
-  const shareUrl = useMemo(() => {
-    if (!card || !message) return "#";
-    const text = `${card.name}のカードを引きました。\n${message}\n#AIオラクルカード`;
-    return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
-  }, [card, message]);
-
-  const drawCard = async () => {
-    const newCard = pickRandomCard();
-    setCard(newCard);
-    setMessage("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/reading", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardName: newCard.name, cardKey: newCard.key })
+  useEffect(() => {
+    const session = ensureSession();
+    const revisitInfo = session?.revisitInfo;
+    if (revisitInfo?.isRevisit) {
+      trackEvent("revisit_detected", {
+        daysSinceLastVisit: revisitInfo.daysSinceLastVisit,
+        streakDays: revisitInfo.streakDays
       });
-
-      const data = await res.json();
-      setMessage(data?.message || "今はゆっくり休み、心の声を優しく聞いてみましょう。");
-    } catch {
-      setMessage("今はゆっくり休み、心の声を優しく聞いてみましょう。");
-    } finally {
-      setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const storedTheme = getSessionState()?.selectedTheme;
+    if (storedTheme && themes.some((item) => item.key === storedTheme)) {
+      setTheme(storedTheme);
+    }
+  }, [themes]);
+
+  const handleThemeSelect = (nextTheme) => {
+    setTheme(nextTheme);
+    setSelectedTheme(nextTheme);
+    trackEvent("theme_selected", { theme: nextTheme });
+  };
+
+  const goDraw = () => {
+    if (!theme) return;
+    router.push(`/draw?theme=${encodeURIComponent(theme)}`);
   };
 
   return (
-    <main className="page">
-      <section className="container">
-        <h1 className="title">やさしいAIオラクルカード</h1>
-        <p className="subtitle">気持ちを整えたいときに、そっと一枚。</p>
+    <main className="min-h-dvh px-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[calc(2rem+env(safe-area-inset-top))]">
+      <section className="mx-auto w-full max-w-md">
+        <header className="mb-8 text-center">
+          <p className="mb-3 text-[0.68rem] tracking-[0.28em] text-slate-500">EMOTIONAL ORACLE</p>
+          <h1 className="font-serif-jp text-[1.8rem] font-medium leading-tight text-slate-700">
+            たまたま開いたあなたへ、
+            <br />
+            今夜の恋の一枚
+          </h1>
+          <p className="mx-auto mt-4 max-w-[19rem] text-sm leading-7 text-slate-500">
+            いまの気持ちに近い恋のテーマをひとつ選んでください。
+          </p>
+        </header>
 
-        {!card && (
-          <button className="primaryButton" onClick={drawCard}>
-            カードを引く
-          </button>
-        )}
-
-        {card && (
-          <article className="result">
-            <h2 className="cardName">{card.name}</h2>
-            <img className="cardImage" src={card.image} alt={`${card.name}のカード画像`} />
-
-            <p className="message">
-              {loading ? "メッセージを受け取っています..." : message}
-            </p>
-
-            <div className="actions">
-              <a
-                className={`shareButton ${!message || loading ? "disabled" : ""}`}
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-disabled={!message || loading}
+        <div className="grid gap-3">
+          {themes.map((item) => {
+            const active = theme === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                className={`w-full rounded-2xl border px-4 py-3.5 text-left text-sm transition ${
+                  active
+                    ? "border-rose-300 bg-rose-50 text-slate-700 shadow-[0_8px_22px_rgba(251,113,133,0.2)]"
+                    : "border-slate-200 bg-white/85 text-slate-600"
+                }`}
+                onClick={() => handleThemeSelect(item.key)}
               >
-                Xでシェア
-              </a>
-              <button className="secondaryButton" onClick={drawCard}>
-                もう一度引く
+                <span className="block text-base font-medium">{item.label}</span>
+                <span className="mt-1 block text-xs text-slate-500">{item.hashTag}</span>
               </button>
-            </div>
-          </article>
-        )}
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          className={`mt-8 w-full rounded-full px-6 py-4 text-[0.98rem] font-medium transition ${
+            theme
+              ? "border border-rose-200/70 bg-gradient-to-r from-rose-100 via-white to-amber-100 text-slate-700 shadow-[0_12px_28px_rgba(148,163,184,0.2)] active:scale-[0.99]"
+              : "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400"
+          }`}
+          onClick={goDraw}
+          disabled={!theme}
+        >
+          今すぐ1枚
+        </button>
       </section>
     </main>
   );
