@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { buildShareText, THEME_LABELS, toDateText } from "../../lib/reading/viralCopy";
+import { buildQuoteLine, buildShareText, THEME_LABELS, toDateText } from "../../lib/reading/viralCopy";
 import { getSessionState, setPremiumIntent } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import PageFrame from "../ui/PageFrame";
@@ -58,18 +58,33 @@ export default function ResultPageClient() {
       message: result.message,
       cardName: result.card.name,
       theme: result.theme,
+      diagnosisType: result.diagnosisType,
       afterglowLine: result.afterglowLine,
       shareHooks: result.card.shareHooks
     });
     return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
   }, [result, template]);
 
+  const quoteLine = useMemo(() => {
+    if (!result) return "";
+    return buildQuoteLine({
+      title: result.title,
+      theme: result.theme,
+      diagnosisType: result.diagnosisType,
+      cardName: result.card.name
+    });
+  }, [result]);
+
   const onShare = () => {
     if (!result) return;
     trackEvent("share_clicked", {
       theme: result.theme,
       cardId: result.card.id,
-      meta: { template }
+      meta: {
+        diagnosisType: result.diagnosisType || result.theme,
+        card: result.card.name,
+        template
+      }
     });
   };
 
@@ -119,6 +134,9 @@ export default function ResultPageClient() {
           <p className="mt-3 rounded-xl bg-rose-50/50 px-3 py-2 text-sm text-slate-700">今日の行動: {result.actionTip}</p>
           <p className="mt-3 rounded-xl bg-amber-50/60 px-3 py-2 text-sm text-slate-600">自分への問い: {result.projectionPrompt}</p>
           <p className="mt-3 text-sm text-slate-500">余韻: {result.afterglowLine}</p>
+          <p className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
+            X投稿専用1行: {quoteLine}
+          </p>
         </div>
       </article>
 
@@ -126,7 +144,9 @@ export default function ResultPageClient() {
         {[
           ["short", "short"],
           ["emotional", "emotional"],
-          ["night", "night"]
+          ["night", "night"],
+          ["diagnosis_label", "diagnosis"],
+          ["quote_reply", "quote"]
         ].map(([key, label]) => (
           <button
             key={key}
