@@ -19,7 +19,7 @@ export default function ResultPageClient() {
 
   useEffect(() => {
     const session = getSessionState();
-    if (!session?.lastResult?.card?.id || !session?.selectedTheme) {
+    if (!session?.lastResult?.card?.id || !session?.diagnosisType) {
       router.replace("/");
       return;
     }

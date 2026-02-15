@@ -39,7 +39,7 @@ export default function PremiumReadingPageClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             diagnosisType: session?.lastResult?.diagnosisType || session?.diagnosisType || "",
-            theme: session?.lastResult?.theme || session?.selectedTheme || ""
+            theme: session?.lastResult?.theme || session?.diagnosisType || ""
           })
         });
         const data = await res.json();

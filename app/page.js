@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ensureSession,
   resetDiagnosisType,
-  resetSelectedTheme,
-  setDiagnosisType,
-  setSelectedTheme
+  setDiagnosisType
 } from "../lib/session/oracleSession";
 import { trackEvent } from "../lib/analytics/trackEvent";
 
@@ -27,7 +25,6 @@ export default function Home() {
   useEffect(() => {
     const session = ensureSession();
     resetDiagnosisType();
-    resetSelectedTheme();
     setDiagnosis("");
     trackEvent("page_view", { meta: { page: "lp" } });
 
@@ -43,7 +40,6 @@ export default function Home() {
   const handleDiagnosisSelect = (nextDiagnosisType) => {
     setDiagnosis(nextDiagnosisType);
     setDiagnosisType(nextDiagnosisType);
-    setSelectedTheme(nextDiagnosisType);
     trackEvent("theme_selected", { theme: nextDiagnosisType });
   };
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { pickRandomCard } from "../../lib/cards";
 import { generateViralTitle } from "../../lib/reading/generateViralTitle";
 import { buildActionTip, buildAfterglowLine, THEME_LABELS } from "../../lib/reading/viralCopy";
-import { getSessionState, setDiagnosisType, setLastResult, setSelectedTheme } from "../../lib/session/oracleSession";
+import { getSessionState, setDiagnosisType, setLastResult } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 
 const DRAW_DELAY_MS = 760;
@@ -22,14 +22,13 @@ export default function DrawPage() {
         ? ""
         : new URLSearchParams(window.location.search).get("diagnosisType") || "";
     const state = getSessionState();
-    const nextTheme = queryDiagnosisType || state?.diagnosisType || state?.selectedTheme || "";
+    const nextTheme = queryDiagnosisType || state?.diagnosisType || "";
     if (!nextTheme || !THEME_LABELS[nextTheme]) {
       router.replace("/");
       return;
     }
     trackEvent("page_view", { meta: { page: "draw" } });
     setDiagnosisType(nextTheme);
-    setSelectedTheme(nextTheme);
     setTheme(nextTheme);
     setDiagnosis(nextTheme);
   }, [router]);
