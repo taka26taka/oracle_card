@@ -129,6 +129,7 @@ export default function ResultPageClient() {
       theme: result.theme,
       cardId: result.card.id,
       meta: {
+        source: "result_secondary",
         diagnosisType: result.diagnosisType || result.theme,
         sessionId
       }
@@ -187,8 +188,15 @@ export default function ResultPageClient() {
       </div>
 
       <div className="mt-3 grid gap-2">
+        <button
+          type="button"
+          className="w-full rounded-full border border-slate-200 bg-slate-700 px-5 py-3 text-sm text-white"
+          onClick={openPremiumIntro}
+        >
+          あなた専用の3枚リーディングへ
+        </button>
         <a
-          className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-slate-700 px-5 py-3 text-sm text-white"
+          className="inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-700"
           href={shareUrl}
           target="_blank"
           rel="noopener noreferrer"
@@ -218,20 +226,20 @@ export default function ResultPageClient() {
       <PremiumCtaCard
         title="3枚で恋の流れを見る"
         description="過去・現在・未来を3枚で読み、相手視点と今週の行動まで整理します。"
-        buttonLabel="あなた専用の3枚リーディングへ"
+        buttonLabel="3枚リーディングの詳細を見る"
         onClick={openPremiumIntro}
       />
 
-      <section className="sticky bottom-2 z-10 mt-4 rounded-2xl border border-amber-100 bg-white/95 p-4 shadow-[0_12px_28px_rgba(148,163,184,0.2)] backdrop-blur">
-        <h2 className="text-sm font-medium text-slate-700">この結果の続きはこちら</h2>
+      <section className="mt-3 rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
+        <p className="text-xs text-slate-500">補助コンテンツ</p>
         <a
-          className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-slate-700"
+          className="mt-2 inline-flex text-sm text-slate-600 underline decoration-slate-300 underline-offset-4"
           href={noteUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={onNoteClick}
         >
-          noteで続きを読む
+          noteの無料記事を読む
         </a>
       </section>
     </PageFrame>
