@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { buildQuoteLine, buildShareText, THEME_LABELS, toDateText } from "../../lib/reading/viralCopy";
 import { getSessionState, setPremiumIntent } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { getNoteUrlByDiagnosisType } from "../../lib/monetization/noteMap";
 import PageFrame from "../ui/PageFrame";
 import PremiumCtaCard from "../premium/PremiumCtaCard";
 
@@ -75,6 +76,11 @@ export default function ResultPageClient() {
     });
   }, [result]);
 
+  const noteUrl = useMemo(() => {
+    if (!result) return "https://note.com/";
+    return getNoteUrlByDiagnosisType(result.diagnosisType || result.theme);
+  }, [result]);
+
   const onShare = () => {
     if (!result) return;
     trackEvent("share_clicked", {
@@ -108,6 +114,19 @@ export default function ResultPageClient() {
     });
     setPremiumIntent(true);
     router.push("/premium/intro");
+  };
+
+  const onNoteClick = () => {
+    if (!result) return;
+    const sessionId = getSessionState()?.sessionId || "unknown";
+    trackEvent("note_click", {
+      theme: result.theme,
+      cardId: result.card.id,
+      meta: {
+        diagnosisType: result.diagnosisType || result.theme,
+        sessionId
+      }
+    });
   };
 
   if (!result) return null;
@@ -196,6 +215,19 @@ export default function ResultPageClient() {
         buttonLabel="あなた専用の3枚リーディングへ"
         onClick={openPremiumIntro}
       />
+
+      <section className="sticky bottom-2 z-10 mt-4 rounded-2xl border border-amber-100 bg-white/95 p-4 shadow-[0_12px_28px_rgba(148,163,184,0.2)] backdrop-blur">
+        <h2 className="text-sm font-medium text-slate-700">この結果の続きはこちら</h2>
+        <a
+          className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-slate-700"
+          href={noteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onNoteClick}
+        >
+          noteで続きを読む
+        </a>
+      </section>
     </PageFrame>
   );
 }
