@@ -13,10 +13,10 @@ import { normalizeDiagnosisType } from "../../lib/domain/diagnosis";
 const RITUAL_TIMINGS_MS = {
   prelude: 250,
   summon: 300,
-  holdMin: 900,
-  holdRange: 300,
-  flipPrep: 180,
-  flip: 450
+  holdMin: 820,
+  holdRange: 240,
+  flipPrep: 160,
+  flip: 430
 };
 
 const REDUCED_TIMINGS_MS = {

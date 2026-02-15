@@ -50,8 +50,8 @@ export default function ResultPageClient() {
 
     measuredRef.current = true;
     const ritualMs = result?.ritualMeta?.ritualMs || 0;
-    const titleDelay = Math.min(Math.max(Math.round(ritualMs * 0.12), 120), 220);
-    const bodyDelay = titleDelay + 200;
+    const titleDelay = Math.min(Math.max(Math.round(ritualMs * 0.1), 90), 180);
+    const bodyDelay = titleDelay + 170;
     const titleTimer = setTimeout(() => setTitleVisible(true), titleDelay);
     const bodyTimer = setTimeout(() => setBodyVisible(true), bodyDelay);
 
