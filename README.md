@@ -81,6 +81,7 @@ OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4.1-mini
 OPENAI_MAX_OUTPUT_TOKENS=260
 EVENT_STORE_FILE=/tmp/oracle-events.json
+NEXT_PUBLIC_ANALYTICS_DEBUG=0
 ```
 
 ## ローカル起動
