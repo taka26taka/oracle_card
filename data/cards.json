@@ -1,0 +1,22 @@
+[
+  { "id": 1, "name": "朝露のはじまり", "key": "new_start" },
+  { "id": 2, "name": "月光の休息", "key": "rest" },
+  { "id": 3, "name": "小鳥のさえずり", "key": "communication" },
+  { "id": 4, "name": "やわらかな風", "key": "change" },
+  { "id": 5, "name": "ひだまりの約束", "key": "trust" },
+  { "id": 6, "name": "静かな湖面", "key": "inner_voice" },
+  { "id": 7, "name": "花びらの贈り物", "key": "gratitude" },
+  { "id": 8, "name": "虹のしずく", "key": "healing" },
+  { "id": 9, "name": "星屑の地図", "key": "purpose" },
+  { "id": 10, "name": "やすらぎの毛布", "key": "self_care" },
+  { "id": 11, "name": "森のコンパス", "key": "direction" },
+  { "id": 12, "name": "白い羽の知らせ", "key": "support" },
+  { "id": 13, "name": "灯りのともる窓", "key": "home" },
+  { "id": 14, "name": "雲間のひかり", "key": "hope" },
+  { "id": 15, "name": "小さな種", "key": "growth" },
+  { "id": 16, "name": "青空の深呼吸", "key": "release" },
+  { "id": 17, "name": "波音のリズム", "key": "balance" },
+  { "id": 18, "name": "金色の鍵", "key": "opportunity" },
+  { "id": 19, "name": "風船の手紙", "key": "joy" },
+  { "id": 20, "name": "祈りのキャンドル", "key": "faith" }
+]

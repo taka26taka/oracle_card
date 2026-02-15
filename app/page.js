@@ -1,9 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ORACLE_CARDS } from "../lib/cards";
-
-const randomCard = () => ORACLE_CARDS[Math.floor(Math.random() * ORACLE_CARDS.length)];
+import { pickRandomCard } from "../lib/cards";
 
 export default function Home() {
   const [card, setCard] = useState(null);
@@ -17,7 +15,7 @@ export default function Home() {
   }, [card, message]);
 
   const drawCard = async () => {
-    const newCard = randomCard();
+    const newCard = pickRandomCard();
     setCard(newCard);
     setMessage("");
     setLoading(true);

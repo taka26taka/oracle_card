@@ -1,16 +1,38 @@
 # やさしいAIオラクルカード
 
-初心者向けのシンプルなAIオラクルカード占いサイトです。  
-`Next.js` で動作し、`Vercel` にそのままデプロイできます。
+初心者向けのシンプルな 1 枚引きオラクルカードサイトです。  
+Next.js(App Router) で構築し、スマホ表示を前提に白ベースで最小構成に整えています。
 
-## 機能
+## 成果物の範囲
 
-- 「カードを引く」ボタン
-- 20種類のオラクルカードをランダム表示
-- カード名・カード画像の表示
-- OpenAI APIで日本語メッセージ生成（150〜200文字）
-- Xシェアボタン
-- もう一度引くボタン
+- 20 枚のカードデータ
+- 1 枚引き（ランダム）
+- カード名/カード画像の表示
+- OpenAI API による日本語メッセージ生成（150〜200文字）
+- APIキー未設定時のフォールバック文表示
+- X シェアボタン
+- Vercel デプロイ可能構成
+
+## 技術スタック
+
+- Next.js 14 (App Router)
+- React 18
+- Node.js 18+ 推奨
+
+## ディレクトリ構成
+
+```text
+app/
+  api/reading/route.js      # 占いメッセージ API
+  globals.css               # スタイル（スマホ最適含む）
+  layout.js                 # メタ情報/viewport
+  page.js                   # 1枚引き画面
+data/
+  cards.json                # 20枚カードデータ
+lib/
+  ai/oracleMessage.js       # AI生成ロジック
+  cards.js                  # カード読み込み/画像生成/ランダム抽選
+```
 
 ## セットアップ
 
@@ -19,23 +41,42 @@ npm install
 cp .env.example .env.local
 ```
 
-`.env.local` に OpenAI APIキーを設定:
+`.env.local` を設定:
 
 ```bash
 OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4.1-mini
+OPENAI_MAX_OUTPUT_TOKENS=260
 ```
 
-## 起動
+## ローカル起動
 
 ```bash
 npm run dev
 ```
 
+アクセス: `http://localhost:3000`
+
+## ビルド確認
+
+```bash
+npm run build
+npm run start
+```
+
 ## Vercel デプロイ
 
 1. GitHub に push
-2. Vercel でプロジェクトを import
-3. 環境変数 `OPENAI_API_KEY` を設定
+2. Vercel でこのリポジトリを Import
+3. Environment Variables に以下を設定
+   - `OPENAI_API_KEY` (必須)
+   - `OPENAI_MODEL` (任意)
+   - `OPENAI_MAX_OUTPUT_TOKENS` (任意)
 4. Deploy
 
-APIキー未設定でもフォールバック文を返すため、画面動作は確認できます。
+`OPENAI_API_KEY` 未設定時でも API はフォールバックメッセージを返すため、画面確認は可能です。
+
+## 補足
+
+- 機能追加は行わず、構成分離と運用しやすさを優先して整理しています。
+- カード画像は実ファイルを持たず、SVG を動的生成しています。
