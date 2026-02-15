@@ -85,6 +85,7 @@ EVENT_DB_PATH=/tmp/oracle-events.sqlite
 NEXT_PUBLIC_ANALYTICS_DEBUG=0
 ANALYTICS_ADMIN_TOKEN=change_me
 NEXT_PUBLIC_EXPERIMENT_LP_COPY=0
+PURCHASE_WEBHOOK_TOKEN=change_me
 NEXT_PUBLIC_NOTE_URL_DEFAULT=https://note.com/
 NEXT_PUBLIC_NOTE_URL_MUTUAL=https://note.com/
 NEXT_PUBLIC_NOTE_URL_WAITING_LOVE=https://note.com/
@@ -135,6 +136,15 @@ curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/daily?da
 curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=2026-02-15"
 ```
 
+購入Webhook受信（サーバー間）:
+
+```bash
+curl -X POST "http://localhost:3000/api/purchase/webhook" \
+  -H "content-type: application/json" \
+  -H "x-webhook-token: change_me" \
+  -d '{"attemptId":"attempt_xxx","sessionId":"s_xxx","provider":"note","externalOrderId":"order_123","amount":1980}'
+```
+
 ## Vercel デプロイ
 
 1. GitHub に push
@@ -146,6 +156,7 @@ curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?d
    - `EVENT_DB_PATH` (任意, 例: `/tmp/oracle-events.sqlite`)
    - `ANALYTICS_ADMIN_TOKEN` (推奨, 集計API保護用)
    - `NEXT_PUBLIC_EXPERIMENT_LP_COPY` (任意, `1`でLPコピーABを有効化)
+   - `PURCHASE_WEBHOOK_TOKEN` (推奨, 購入Webhook認証用)
 4. Deploy
 
 `OPENAI_API_KEY` 未設定時でも API はフォールバックメッセージを返すため、画面確認は可能です。
