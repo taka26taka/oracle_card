@@ -9,6 +9,7 @@ import PageFrame from "../ui/PageFrame";
 import PremiumDiffTable from "./PremiumDiffTable";
 
 const CHECKOUT_URL = process.env.NEXT_PUBLIC_CHECKOUT_URL || "";
+const CHECKOUT_RETURN_PARAM = process.env.NEXT_PUBLIC_CHECKOUT_RETURN_PARAM || "";
 
 export default function PremiumIntroPageClient() {
   const router = useRouter();
@@ -42,6 +43,14 @@ export default function PremiumIntroPageClient() {
       checkoutUrl.searchParams.set("sessionId", sessionId);
       checkoutUrl.searchParams.set("diagnosisType", diagnosisType);
       checkoutUrl.searchParams.set("source", "premium_intro");
+      if (CHECKOUT_RETURN_PARAM && typeof window !== "undefined") {
+        const callback = new URL("/premium/complete", window.location.origin);
+        callback.searchParams.set("attemptId", attemptId);
+        callback.searchParams.set("sessionId", sessionId);
+        callback.searchParams.set("diagnosisType", diagnosisType);
+        callback.searchParams.set("source", "premium_intro");
+        checkoutUrl.searchParams.set(CHECKOUT_RETURN_PARAM, callback.toString());
+      }
       nextCheckoutUrl = checkoutUrl.toString();
     } catch {
       return;

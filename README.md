@@ -80,6 +80,7 @@ cp .env.example .env.local
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4.1-mini
 OPENAI_MAX_OUTPUT_TOKENS=260
+NEXT_PUBLIC_CHECKOUT_RETURN_PARAM=redirect_url
 EVENT_STORE_FILE=/tmp/oracle-events.json
 NEXT_PUBLIC_ANALYTICS_DEBUG=0
 NEXT_PUBLIC_NOTE_URL_DEFAULT=https://note.com/
