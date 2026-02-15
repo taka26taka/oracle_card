@@ -81,7 +81,7 @@ OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4.1-mini
 OPENAI_MAX_OUTPUT_TOKENS=260
 NEXT_PUBLIC_CHECKOUT_RETURN_PARAM=redirect_url
-EVENT_STORE_FILE=/tmp/oracle-events.json
+EVENT_DB_PATH=/tmp/oracle-events.sqlite
 NEXT_PUBLIC_ANALYTICS_DEBUG=0
 NEXT_PUBLIC_NOTE_URL_DEFAULT=https://note.com/
 NEXT_PUBLIC_NOTE_URL_MUTUAL=https://note.com/
@@ -119,7 +119,7 @@ npm run start
    - `OPENAI_API_KEY` (必須)
    - `OPENAI_MODEL` (任意)
    - `OPENAI_MAX_OUTPUT_TOKENS` (任意)
-   - `EVENT_STORE_FILE` (任意, 例: `/tmp/oracle-events.json`)
+   - `EVENT_DB_PATH` (任意, 例: `/tmp/oracle-events.sqlite`)
 4. Deploy
 
 `OPENAI_API_KEY` 未設定時でも API はフォールバックメッセージを返すため、画面確認は可能です。
