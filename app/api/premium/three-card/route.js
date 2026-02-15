@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateOracleMessage } from "../../../../lib/ai/oracleMessage";
 import { ORACLE_CARDS } from "../../../../lib/cards";
+import { normalizeDiagnosisType } from "../../../../lib/domain/diagnosis";
 
 const POSITIONS = [
   { key: "past", label: "過去" },
@@ -20,8 +21,8 @@ const pickThreeUniqueCards = () => {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const diagnosisType = body?.diagnosisType || "";
-    const theme = body?.theme || diagnosisType || "waiting_contact";
+    const diagnosisType = normalizeDiagnosisType(body?.diagnosisType || "", "");
+    const theme = normalizeDiagnosisType(body?.theme || "", diagnosisType || "waiting_contact");
     const cards = pickThreeUniqueCards();
 
     const reads = await Promise.all(

@@ -8,6 +8,7 @@ import { buildActionTip, buildAfterglowLine, THEME_LABELS } from "../../lib/read
 import { getSessionState, setDiagnosisType, setLastResult } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
+import { normalizeDiagnosisType } from "../../lib/domain/diagnosis";
 
 const DRAW_DELAY_MS = 760;
 
@@ -21,9 +22,9 @@ export default function DrawPage() {
     const queryDiagnosisType =
       typeof window === "undefined"
         ? ""
-        : new URLSearchParams(window.location.search).get("diagnosisType") || "";
+        : normalizeDiagnosisType(new URLSearchParams(window.location.search).get("diagnosisType") || "");
     const state = getSessionState();
-    const nextTheme = queryDiagnosisType || state?.diagnosisType || "";
+    const nextTheme = queryDiagnosisType || normalizeDiagnosisType(state?.diagnosisType || "");
     if (!nextTheme || !THEME_LABELS[nextTheme]) {
       router.replace("/");
       return;
