@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFunnelStats } from "../../../../lib/analytics/eventStore";
+import { requireAdminToken } from "../../../../lib/api/adminAuth";
 
 const toDateText = (value) => {
   if (!value) return "";
@@ -12,6 +13,9 @@ const toDateText = (value) => {
 };
 
 export async function GET(request) {
+  const unauthorized = requireAdminToken(request);
+  if (unauthorized) return unauthorized;
+
   const dateFrom = toDateText(request.nextUrl.searchParams.get("date_from")) || toDateText(new Date());
   const dateTo = toDateText(request.nextUrl.searchParams.get("date_to")) || dateFrom;
   const experimentId = (request.nextUrl.searchParams.get("experiment_id") || "").trim();

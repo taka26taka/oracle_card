@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDailyDashboardStats, recordEvent } from "../../../lib/analytics/eventStore";
 import { validateAndNormalizeEvent } from "../../../lib/analytics/eventValidation";
+import { requireAdminToken } from "../../../lib/api/adminAuth";
 
 const logEventApi = (level, message, details = {}) => {
   const payload = {
@@ -16,6 +17,9 @@ const logEventApi = (level, message, details = {}) => {
 };
 
 export async function GET(request) {
+  const unauthorized = requireAdminToken(request);
+  if (unauthorized) return unauthorized;
+
   const date = request.nextUrl.searchParams.get("date") || "";
   const stats = getDailyDashboardStats(date);
   return NextResponse.json({ ok: true, stats }, { status: 200 });

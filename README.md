@@ -83,6 +83,8 @@ OPENAI_MAX_OUTPUT_TOKENS=260
 NEXT_PUBLIC_CHECKOUT_RETURN_PARAM=redirect_url
 EVENT_DB_PATH=/tmp/oracle-events.sqlite
 NEXT_PUBLIC_ANALYTICS_DEBUG=0
+ANALYTICS_ADMIN_TOKEN=change_me
+NEXT_PUBLIC_EXPERIMENT_LP_COPY=0
 NEXT_PUBLIC_NOTE_URL_DEFAULT=https://note.com/
 NEXT_PUBLIC_NOTE_URL_MUTUAL=https://note.com/
 NEXT_PUBLIC_NOTE_URL_WAITING_LOVE=https://note.com/
@@ -118,19 +120,19 @@ npm run start
 例:
 
 ```bash
-curl "http://localhost:3000/api/analytics/daily?date=2026-02-15"
+curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/daily?date=2026-02-15"
 ```
 
 ABテスト条件での絞り込み:
 
 ```bash
-curl "http://localhost:3000/api/analytics/daily?date=2026-02-15&experiment_id=lp_copy_test&variant=B"
+curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/daily?date=2026-02-15&experiment_id=lp_copy_test&variant=B"
 ```
 
 期間ファネル集計:
 
 ```bash
-curl "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=2026-02-15"
+curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=2026-02-15"
 ```
 
 ## Vercel デプロイ
@@ -142,6 +144,8 @@ curl "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=20
    - `OPENAI_MODEL` (任意)
    - `OPENAI_MAX_OUTPUT_TOKENS` (任意)
    - `EVENT_DB_PATH` (任意, 例: `/tmp/oracle-events.sqlite`)
+   - `ANALYTICS_ADMIN_TOKEN` (推奨, 集計API保護用)
+   - `NEXT_PUBLIC_EXPERIMENT_LP_COPY` (任意, `1`でLPコピーABを有効化)
 4. Deploy
 
 `OPENAI_API_KEY` 未設定時でも API はフォールバックメッセージを返すため、画面確認は可能です。

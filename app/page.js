@@ -9,10 +9,12 @@ import {
 } from "../lib/session/oracleSession";
 import { trackEvent } from "../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../lib/analytics/events";
+import { getLpCopyExperiment, toExperimentMeta } from "../lib/analytics/experiments";
 
 export default function Home() {
   const router = useRouter();
   const [diagnosisType, setDiagnosis] = useState("");
+  const [experiment, setExperiment] = useState({ enabled: false, experimentId: "", variant: "" });
   const diagnosisOptions = useMemo(
     () => [
       { key: "mutual", label: "通じ合ってる気がする（両想い）", hashTag: "#両想い" },
@@ -27,13 +29,23 @@ export default function Home() {
     const session = ensureSession();
     resetDiagnosisType();
     setDiagnosis("");
-    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.LP } });
+    const exp = getLpCopyExperiment(session?.sessionId || "");
+    setExperiment(exp);
+    trackEvent(EVENT_NAMES.PAGE_VIEW, {
+      meta: {
+        page: PAGE_NAMES.LP,
+        ...toExperimentMeta(exp)
+      }
+    });
 
     const revisitInfo = session?.revisitInfo;
     if (revisitInfo?.isRevisit) {
       trackEvent(EVENT_NAMES.REVISIT_DETECTED, {
-        daysSinceLastVisit: revisitInfo.daysSinceLastVisit,
-        streakDays: revisitInfo.streakDays
+        meta: {
+          daysSinceLastVisit: revisitInfo.daysSinceLastVisit,
+          streakDays: revisitInfo.streakDays,
+          ...toExperimentMeta(exp)
+        }
       });
     }
   }, []);
@@ -41,23 +53,28 @@ export default function Home() {
   const handleDiagnosisSelect = (nextDiagnosisType) => {
     setDiagnosis(nextDiagnosisType);
     setDiagnosisType(nextDiagnosisType);
-    trackEvent(EVENT_NAMES.THEME_SELECTED, { theme: nextDiagnosisType });
+    trackEvent(EVENT_NAMES.THEME_SELECTED, { theme: nextDiagnosisType, meta: toExperimentMeta(experiment) });
   };
 
   const goDraw = () => {
     if (!diagnosisType) return;
-    trackEvent(EVENT_NAMES.DIAGNOSIS_COMPLETED, { diagnosisType });
+    trackEvent(EVENT_NAMES.DIAGNOSIS_COMPLETED, { diagnosisType, meta: toExperimentMeta(experiment) });
     router.push(`/draw?diagnosisType=${encodeURIComponent(diagnosisType)}`);
   };
 
   const activeDiagnosisLabel = diagnosisOptions.find((item) => item.key === diagnosisType)?.label || "";
+
+  const heroCopy =
+    experiment.enabled && experiment.variant === "B"
+      ? "迷う恋ほど、1枚で今夜の動き方が決まる"
+      : "今夜の恋を、1枚で読む";
 
   return (
     <main className="min-h-dvh px-4 pb-[calc(2.5rem+env(safe-area-inset-bottom))] pt-[calc(1.4rem+env(safe-area-inset-top))]">
       <div className="mx-auto w-full max-w-md space-y-6">
         <section className="overflow-hidden rounded-[2rem] border border-rose-100/70 bg-white/90 p-6 shadow-[0_24px_64px_rgba(148,163,184,0.22)]">
           <p className="text-center text-[0.68rem] tracking-[0.28em] text-slate-500">MOONLIGHT ORACLE</p>
-          <h1 className="mt-3 text-center font-serif-jp text-[1.9rem] leading-tight text-slate-800">今夜の恋を、1枚で読む</h1>
+          <h1 className="mt-3 text-center font-serif-jp text-[1.9rem] leading-tight text-slate-800">{heroCopy}</h1>
           <p className="mx-auto mt-3 max-w-[18rem] text-center text-sm leading-7 text-slate-600">
             無料で1枚。あなたの今の恋愛状態に合わせて、核心と次の行動を返します。
           </p>
