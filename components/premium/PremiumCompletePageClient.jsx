@@ -59,9 +59,16 @@ export default function PremiumCompletePageClient() {
           <button
             type="button"
             className="w-full rounded-full border border-slate-200 bg-slate-700 px-5 py-3 text-sm text-white"
+            onClick={() => router.push("/premium/reading")}
+          >
+            3枚リーディングを見る
+          </button>
+          <button
+            type="button"
+            className="w-full rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-600"
             onClick={() => router.push("/result")}
           >
-            結果画面へ戻る
+            無料結果へ戻る
           </button>
           <button
             type="button"
