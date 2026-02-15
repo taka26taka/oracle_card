@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateOracleMessage } from "../../../../lib/ai/oracleMessage";
 import { ORACLE_CARDS } from "../../../../lib/cards";
 import { normalizeDiagnosisType } from "../../../../lib/domain/diagnosis";
+import { hasCompletedPurchaseAttempt } from "../../../../lib/analytics/eventStore";
 
 const POSITIONS = [
   { key: "past", label: "過去" },
@@ -21,6 +22,11 @@ const pickThreeUniqueCards = () => {
 export async function POST(request) {
   try {
     const body = await request.json();
+    const attemptId = typeof body?.attemptId === "string" ? body.attemptId.trim() : "";
+    if (!attemptId || !hasCompletedPurchaseAttempt(attemptId)) {
+      return NextResponse.json({ error: "premium_access_required" }, { status: 403 });
+    }
+
     const diagnosisType = normalizeDiagnosisType(body?.diagnosisType || "", "");
     const theme = normalizeDiagnosisType(body?.theme || "", diagnosisType || "waiting_contact");
     const cards = pickThreeUniqueCards();

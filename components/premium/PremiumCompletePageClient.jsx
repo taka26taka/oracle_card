@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { clearCheckoutAttempt, getSessionState } from "../../lib/session/oracleSession";
+import { clearCheckoutAttempt, getSessionState, grantPremiumAccess } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import PageFrame from "../ui/PageFrame";
@@ -40,7 +40,13 @@ export default function PremiumCompletePageClient() {
       })
     })
       .then((res) => {
-        if (res.ok) clearCheckoutAttempt();
+        if (res.ok) {
+          grantPremiumAccess({
+            attemptId,
+            source: params.get("source") || "note"
+          });
+          clearCheckoutAttempt();
+        }
       })
       .catch(() => {
         // keep UX regardless of tracking errors

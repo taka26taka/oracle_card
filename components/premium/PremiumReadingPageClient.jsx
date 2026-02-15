@@ -20,6 +20,11 @@ export default function PremiumReadingPageClient() {
       router.replace("/");
       return;
     }
+    const premiumAttemptId = session?.premiumAccess?.attemptId || "";
+    if (!premiumAttemptId) {
+      router.replace("/premium/intro");
+      return;
+    }
 
     trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.PREMIUM_READING } });
     trackEvent(EVENT_NAMES.PREMIUM_READING_VIEWED, {
@@ -39,6 +44,7 @@ export default function PremiumReadingPageClient() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            attemptId: premiumAttemptId,
             diagnosisType: session?.lastResult?.diagnosisType || session?.diagnosisType || "",
             theme: session?.lastResult?.theme || session?.diagnosisType || ""
           })
