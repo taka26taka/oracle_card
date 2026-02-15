@@ -44,6 +44,13 @@ export async function POST(request) {
       });
       return NextResponse.json({ error: "invalid_purchase_attempt" }, { status: 400 });
     }
+    if (!result?.recorded && result?.reason === "expired_purchase_attempt") {
+      logEventApi("warn", "expired_purchase_attempt", {
+        event: body.event,
+        attemptId: body?.meta?.attemptId || ""
+      });
+      return NextResponse.json({ error: "expired_purchase_attempt" }, { status: 400 });
+    }
     if (!result?.recorded && result?.reason === "duplicate_purchase_attempt") {
       logEventApi("info", "duplicate_purchase_attempt", {
         event: body.event,

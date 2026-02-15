@@ -54,6 +54,10 @@ export async function POST(request) {
       logPurchaseApi("warn", "invalid_purchase_attempt", { attemptId });
       return NextResponse.json({ error: "invalid_purchase_attempt" }, { status: 400 });
     }
+    if (!result?.recorded && result?.reason === "expired_purchase_attempt") {
+      logPurchaseApi("warn", "expired_purchase_attempt", { attemptId });
+      return NextResponse.json({ error: "expired_purchase_attempt" }, { status: 400 });
+    }
     if (!result?.recorded) {
       logPurchaseApi("warn", "failed_to_record_purchase", { reason: result?.reason || "unknown", attemptId });
       return NextResponse.json({ error: "failed_to_record_purchase" }, { status: 400 });
