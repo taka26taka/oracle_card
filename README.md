@@ -40,6 +40,9 @@ docs/
 ## ドキュメント
 
 - レビュー仕様書: `docs/review-spec.md`
+- システム全体像: `docs/system-overview.md`
+- ファイルマップ: `docs/file-map.md`
+- 編集ルール: `docs/edit-rules.md`
 
 ## セットアップ
 
