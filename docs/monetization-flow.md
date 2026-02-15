@@ -15,7 +15,11 @@ premium導線カード
   ↓
 /premium/intro
   ↓
-外部購入リンク（note想定）
+外部購入リンク（attemptId付き）
+  ↓
+/premium/complete または webhook
+  ↓
+/premium/reading
 ```
 
 ## どこで有料導線を出すか
@@ -35,12 +39,23 @@ premium導線カード
 ```
 
 - 表示イベント: `premium_intro_viewed`
-- 購入クリック: `premium_checkout_clicked`
+- 購入クリック: `premium_checkout_clicked`（`attemptId` 付き）
+
+## 購入完了判定
+
+1. `premium_checkout_clicked` に記録済みの `attemptId` が必須  
+2. `purchase_completed` は 48時間以内のみ有効  
+3. 同一 `attemptId` の重複完了は拒否（idempotent）  
+
+受信ルート:
+- `POST /api/purchase/complete`（フロント戻り）
+- `POST /api/purchase/webhook`（サーバー間連携）
 
 ## 収益実験の最低KPI
 
-- `premium_cta_clicked / result_view`
+- `premium_cta_clicked / result_viewed`
 - `premium_intro_viewed / premium_cta_clicked`
 - `premium_checkout_clicked / premium_intro_viewed`
+- `purchase_completed / premium_checkout_clicked`
 
 この3つを追うと、導線のどこで落ちるかが見えます。

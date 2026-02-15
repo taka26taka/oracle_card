@@ -1,66 +1,60 @@
 # Architecture Overview
 
-## 何のアプリか（3行）
-このアプリは、女性向け恋愛オラクルのWebアプリです。  
-無料の1枚リーディングで拡散と保存を狙い、深掘り後に有料導線へつなげます。  
-匿名運用・個人開発を前提に、最小構成で収益実験できる設計です。
+## 何のプロダクトか
+恋愛オラクルの無料体験を入口に、`note` 購入で3枚リーディングへ進む導線型プロダクトです。  
+計測はすべて `/api/events` 経由で SQLite (`EVENT_DB_PATH`) に保存し、`/api/analytics/*` でCVを集計します。
 
-## 画面構成
-
-```text
-/                  トップ（恋愛状態診断4択）
-  -> /draw         1枚引き演出
-  -> /result       結果表示（スクショ + 共有 + premium導線）
-      -> /deep     深掘り（最大2回）
-      -> /premium/intro   有料3枚の案内
-```
-
-## state構造
-
-保存先: localStorage (`oracle_session_v1`)
+## ルート構成
 
 ```text
-sessionId          匿名セッションID
-selectedTheme      描画時のテーマキー
-diagnosisType      診断4択の選択値
-lastResult         1枚結果（カード、文、日付、deep文など）
-deepCount          deep実行回数（0-2）
-premiumIntent      有料導線を踏んだか
-threeCardResult    将来の3枚結果用スロット（未使用）
+/                    LP（診断4択 + ABコピー）
+/draw                1枚抽選
+/result              1枚結果（共有 / deep / premium導線）
+/deep                深掘り（最大2回）
+/premium/intro       有料導線（checkout開始）
+/premium/complete    購入完了戻り先（purchase_completed記録）
+/premium/reading     3枚リーディング（購入済みattempt必須）
+/admin/dashboard     管理用の簡易ダッシュボード
 ```
 
-## API構造
+## 状態管理（localStorage）
+
+保存先は `oracle_session_v1` です。主キー:
+
+```text
+sessionId
+diagnosisType / selectedTheme(互換キー)
+lastResult
+deepCount
+premiumIntent
+checkoutAttempt
+premiumAccess
+threeCardResult
+experimentContext
+```
+
+## API構成
 
 ```text
 POST /api/reading
-  input: cardName, theme, diagnosisType?, deepFocus?
-  output: { message, fallback, reason? }
-
 POST /api/events
-  input: event, sessionId, ts, path, ...meta
-  output: { ok: true }
+GET  /api/events                    # admin token必須
+GET  /api/analytics/daily           # admin token必須
+GET  /api/analytics/funnel          # admin token必須
+POST /api/purchase/complete
+POST /api/purchase/webhook          # x-webhook-token必須
+POST /api/premium/three-card        # 購入attempt検証
 ```
 
-## 有料導線構造
+## 有料導線とアクセス制御
 
 ```text
-無料1枚 (/result)
-  -> premiumカード表示
-  -> /premium/intro
-
-無料deep2回到達 (/deep)
-  -> premiumカード表示
-  -> /premium/intro
+/premium/intro で checkoutAttempt 発行
+  -> premium_checkout_clicked(attemptId付き) 記録
+  -> 外部checkout
+  -> /premium/complete で purchase_completed 記録（または webhook）
+  -> premiumAccess 付与
+  -> /premium/reading で attemptId検証し3枚生成
 ```
 
-## 収益導線（現在）
-
-```text
-X拡散
-  -> 無料1枚
-  -> deepで回遊
-  -> /premium/intro
-  -> 外部購入リンク（NEXT_PUBLIC_CHECKOUT_URL）
-```
-
-購入リンク未設定時は「現在準備中です」を表示し、リンク無効にします。
+`attemptId` が未記録/期限切れ/重複の場合は購入完了イベントを拒否します（TTL 48時間）。

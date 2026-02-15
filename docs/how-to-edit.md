@@ -1,70 +1,65 @@
-# How To Edit（Next.js未経験者向け）
+# How To Edit（実装運用向け）
 
-このドキュメントは「どこを触れば何が変わるか」を実作業向けにまとめています。
+このドキュメントは、実装変更時にどこを触るかを最短で判断するための作業ガイドです。
 
-## 1. 文言を変えたい
+## 1. LP文言やABコピーを変える
 
-### トップ文言
 - ファイル: `app/page.js`
-- 変更箇所: タイトル、説明、診断4択ラベル
+- 変更対象:
+  - hero文言
+  - セクション文言
+  - ABテスト分岐（`experiment.variant`）
 
-### 結果画面文言
-- ファイル: `components/result/ResultPageClient.jsx`
-- 変更箇所: ボタン文言、premiumカード文言
+注意:
+- `trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.LP }})` は消さない
+- `setExperimentContext` を残す（後続イベントのmeta付与に必要）
 
-### premium紹介文
-- ファイル: `components/premium/PremiumIntroPageClient.jsx`
+## 2. 1枚結果やdeep体験を変える
 
-## 2. カードを追加したい
+- 結果本体: `components/result/ResultPageClient.jsx`
+- 深掘り本体: `components/deep/DeepPageClient.jsx`
+- タイトル/共有文: `lib/reading/generateViralTitle.js`, `lib/reading/viralCopy.js`
 
-- ファイル: `data/cards.json`
-- 追加項目: `id`, `name`, `key` + 拡張文言（viralTitleSeeds 等）
-- 注意: 既存キーは削除しない（追加のみ）
+注意:
+- `result_first_paint`, `result_viewed`, `deep_focus_selected` の契約を壊さない
+- `deepCount` 上限（2）を変える場合はKPI定義も同時更新
 
-## 3. 価格や有料導線文言を変えたい
+## 3. note導線を変える
 
-- premium比較表: `components/premium/PremiumDiffTable.jsx`
-- premium CTAカード: `components/premium/PremiumCtaCard.jsx`
-- result/deepのCTA表示位置:
-  - `components/result/ResultPageClient.jsx`
-  - `components/deep/DeepPageClient.jsx`
+- ルーティング先URL: `.env.local` (`NEXT_PUBLIC_NOTE_URL_*`, `NEXT_PUBLIC_CHECKOUT_URL`)
+- 診断別マップ: `lib/monetization/noteMap.js`
+- CTA表示: `components/result/ResultPageClient.jsx`, `components/premium/PremiumIntroPageClient.jsx`
 
-## 4. noteリンクを変更したい
+## 4. 課金完了フローを変える
 
-- 設定場所: `.env.local`
-- 変数名: `NEXT_PUBLIC_CHECKOUT_URL`
+- 戻り完了API: `app/api/purchase/complete/route.js`
+- webhook完了API: `app/api/purchase/webhook/route.js`
+- 完了画面: `components/premium/PremiumCompletePageClient.jsx`
+- 購入検証ロジック: `lib/analytics/eventStore.js`
 
-例:
-```bash
-NEXT_PUBLIC_CHECKOUT_URL=https://note.com/xxxx
-```
+注意:
+- `attemptId` 検証と重複防止ロジックは維持する
 
-- 表示ロジック: `components/premium/PremiumIntroPageClient.jsx`
-- 未設定時: 「現在準備中です」を表示（リンク無効）
+## 5. 計測を追加/修正する
 
-## 5. イベントを追加/修正したい
+- 送信: `lib/analytics/trackEvent.js`
+- 受信/保存: `app/api/events/route.js`, `lib/analytics/eventStore.js`
+- 契約定義: `lib/analytics/events.js`
+- 集計API: `app/api/analytics/daily/route.js`, `app/api/analytics/funnel/route.js`
 
-- 送信処理: `lib/analytics/trackEvent.js`
-- 受信API: `app/api/events/route.js`
-- 既存名は変更しない:
-  - `theme_selected`
-  - `diagnosis_completed`
-  - `result_first_paint`
-  - `share_clicked`
-  - `deep_dive_opened`
-  - `deep_focus_selected`
-  - `premium_cta_clicked`
-  - `premium_intro_viewed`
-  - `premium_checkout_clicked`
+注意:
+- 既存イベント名は変更しない
+- 変更時は `docs/kpi-plan.md` も更新する
 
-## 6. 変更後に必ずやる確認
+## 6. 実装後の確認
 
 ```bash
 npm run build
 ```
 
-目視チェック:
-1. トップで診断未選択だと進めない
-2. result/deepからpremiumに遷移できる
-3. checkout URL未設定時に「現在準備中です」が出る
-4. もう1枚が `diagnosisType` 付きでdrawに戻る
+手動確認:
+1. `/` で診断未選択時にCTA無効
+2. `/result` で `result_viewed` が送信される
+3. `/premium/intro` で checkoutクリック時に `attemptId` が付与される
+4. `/premium/complete` から `/premium/reading` に遷移できる
+5. `GET /api/analytics/daily` が `x-admin-token` で取得できる

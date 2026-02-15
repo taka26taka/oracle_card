@@ -7,10 +7,14 @@ Next.js(App Router) で構築し、スマホ表示を前提に、余白を活か
 
 - 20 枚のカードデータ
 - 1 枚引き（ランダム）
+- deep（2回制限）
 - カード名/カード画像の表示
 - OpenAI API による日本語メッセージ生成（150〜200文字）
 - APIキー未設定時のフォールバック文表示
 - X シェアボタン
+- premium導線（intro/complete/reading）
+- イベントDB永続化（SQLite）
+- 日次/期間CV集計API
 - Vercel デプロイ可能構成
 
 ## 技術スタック
@@ -26,26 +30,41 @@ Next.js(App Router) で構築し、スマホ表示を前提に、余白を活か
 app/
   api/reading/route.js      # 占いメッセージ API
   api/events/route.js       # イベント受信 API
+  api/analytics/daily/route.js   # 日次集計
+  api/analytics/funnel/route.js  # 期間ファネル集計
+  api/purchase/complete/route.js # 購入完了記録（戻り）
+  api/purchase/webhook/route.js  # 購入完了記録（Webhook）
+  api/premium/three-card/route.js # 3枚リーディング生成
   deep/page.js              # deep画面エントリ
   draw/page.js              # 1枚引き画面
   globals.css               # ベーススタイル/背景/フォント
   layout.js                 # メタ情報/viewport/Tailwind CDN読み込み
   page.js                   # トップ画面（診断4択）
   premium/intro/page.jsx    # 有料導線紹介ページ
+  premium/complete/page.jsx # 購入完了画面
+  premium/reading/page.jsx  # 3枚リーディング画面
   result/page.js            # 結果画面エントリ
 components/
   deep/DeepPageClient.jsx
   premium/PremiumCtaCard.jsx
+  premium/PremiumCompletePageClient.jsx
   premium/PremiumDiffTable.jsx
   premium/PremiumIntroPageClient.jsx
+  premium/PremiumReadingPageClient.jsx
   result/ResultPageClient.jsx
   ui/PageFrame.jsx
 data/
   cards.json                # 20枚カードデータ
 lib/
   ai/oracleMessage.js       # AI生成ロジック
+  analytics/eventDb.js      # SQLite初期化
+  analytics/eventStore.js   # 記録・集計
+  analytics/events.js       # イベント契約
+  analytics/experiments.js  # AB割り当て
   analytics/trackEvent.js   # イベント送信
+  api/adminAuth.js          # 管理API認証
   cards.js                  # カード読み込み/画像生成/ランダム抽選
+  monetization/noteMap.js   # 診断別note URL
   reading/generateViralTitle.js
   reading/viralCopy.js
   session/oracleSession.js  # localStorage状態管理

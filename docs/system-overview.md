@@ -1,116 +1,83 @@
 # システム全体像（保守理解用）
 
-この章でわかること: このアプリが「何を目指し」「どの順番で動き」「どこで計測しているか」を短時間で把握できます。
+このドキュメントは、現行実装の「導線」「計測」「購入判定」を短時間で把握するための要約です。
 
-## 1. アプリの目的
+## 1. 目的
 
-結論: このアプリは「占い」よりも、Xでシェアされる感情コンテンツを作ることを優先しています。
+- LP起点で `draw -> result -> premium` のCVを計測可能にする
+- イベントをDB永続化し、日次・期間ファネルをAPIで取得できる状態を維持する
+- 外部決済（note/Stripe想定）の前後で `purchase_completed` を確実に記録する
 
-- ユーザーは恋愛状態を診断する（4択）
-- 1枚引きでメッセージを受け取る
-- スクショしやすい結果を見てXに貼る
-- 深掘りで回遊し、再シェアできる
-- 必要な人だけ有料導線へ進む（3枚リーディング予告）
-
-## 2. 全体構造
-
-この章でわかること: どのフォルダに何があるか。
+## 2. フォルダ責務
 
 ```text
-app/    画面とAPI
-lib/    ロジック（カード・文生成・計測・セッション）
-data/   元データ（cards.json）
+app/    画面とAPIルート
+components/  画面本体（Client Component）
+lib/    セッション・計測・AI・導線ロジック
+data/   カード定義
 docs/   運用ドキュメント
 ```
 
-## 3. ページ遷移図
-
-この章でわかること: 画面の移動順。
+## 3. 主要画面遷移
 
 ```text
-[/] トップ
-  └─ 恋愛状態4択を選択して「診断して1枚引く」
-      ↓
-[/draw] 抽選演出 (約0.76秒)
-      ↓ 自動遷移
-[/result] 結果表示・共有・深掘り
-  ├─ 「深掘りする」→ [/deep]
-  ├─ 「3枚で恋の流れを見る」→ [/premium/intro]
-  └─ 「もう1枚」→ [/draw?diagnosisType=...]
-
-[/deep] 同カード深掘り（最大2回）
-  ├─ 2回到達後「3枚で恋の流れを見る」→ [/premium/intro]
-  └─ 「トップ戻る」→ [/]
-
-[/premium/intro] 有料案内
-  ├─ 無料 vs 有料の差分表
-  └─ 外部リンク（note想定）
+/ -> /draw -> /result -> (/deep | /premium/intro)
+/premium/intro -> 外部checkout -> /premium/complete -> /premium/reading
 ```
 
-## 4. データの流れ
+- `/deep` は2回まで（`deepCount` で制御）
+- `/premium/reading` は購入済み `attemptId` がないと遷移不可
 
-この章でわかること: どこでデータが作られて保存されるか。
+## 4. 計測パイプライン
 
 ```text
-[UI] /draw
-  ├─ pickRandomCard() でカード決定
-  ├─ /api/reading に cardName, theme, diagnosisType を送信
-  ├─ generateViralTitle() でタイトル生成
-  └─ setLastResult() で localStorage 保存
-
-[UI] /result
-  ├─ getSessionState() で lastResult 読み込み
-  ├─ buildShareText() で投稿文生成
-  └─ X intent URL を作る
-
-[UI] /deep
-  ├─ /api/reading に deepFocus + diagnosisType を送信
-  └─ setDeepResult() で deepCount を更新（2回上限）
-
-[UI] /premium/intro
-  ├─ premium_intro_viewed を送信
-  └─ 外部リンク押下で premium_checkout_clicked を送信
+Client(trackEvent)
+  -> POST /api/events
+  -> lib/analytics/eventStore.recordEvent
+  -> SQLite(events table)
+  -> GET /api/analytics/daily or /api/analytics/funnel
 ```
 
-補足:
-- セッション保存先は localStorage の `oracle_session_v1`
-- 主要フィールドは `selectedTheme`, `diagnosisType`, `lastResult`, `deepCount`, `sessionId`
+- 保存先: `EVENT_DB_PATH`（未設定時 `/tmp/oracle-events.sqlite`）
+- `event_normalized` で集計キーを統一
+  - `draw_executed` -> `draw_completed`
+  - `result_first_paint` -> `result_viewed`
+  - `page_view` -> `page_view_{page}`
 
-## 5. 計測イベント一覧
+## 5. 購入イベントの整合性
 
-この章でわかること: KPIに使うイベント名と発火場所。
+- checkoutクリック時に `attemptId` を発行して `premium_checkout_clicked` に保存
+- `purchase_completed` は checkout実績を検証してからのみ記録
+  - 存在しない `attemptId`: reject
+  - 48時間超過: reject
+  - 同一 `attemptId` 二重完了: duplicate扱い
+- 経路は2つ
+  - `/premium/complete` から `POST /api/purchase/complete`
+  - サーバー間 `POST /api/purchase/webhook`（`x-webhook-token` 必須）
 
-必須契約（変更禁止）:
-- `theme_selected`（トップでテーマ選択）
-- `diagnosis_completed`（診断確定）
-- `result_first_paint`（resultタイトル描画計測）
-- `share_clicked`（共有ボタン押下）
-- `deep_dive_opened`（resultからdeepへ遷移）
-- `deep_focus_selected`（deepで深掘り実行）
-- `premium_cta_clicked`（result/deep から有料導線押下）
-- `premium_intro_viewed`（premium intro 表示）
-- `premium_checkout_clicked`（購入リンク押下）
+## 6. 主要イベント（現行）
 
-実装済みの補助イベント:
+- `page_view`
+- `theme_selected`
+- `diagnosis_completed`
 - `draw_executed`
-- `revisit_detected`
-- `screenshot_intent`
+- `result_first_paint`
+- `result_viewed`
+- `deep_dive_opened`
+- `deep_focus_selected`
+- `premium_cta_clicked`
+- `premium_intro_viewed`
+- `premium_checkout_clicked`
+- `note_click`
+- `purchase_completed`
 
-## 6. バズ設計意図
+## 7. まず読むべきファイル
 
-この章でわかること: なぜこのUI設計か。
-
-- 最初に刺さる一文を先に見せる（結果タイトル）
-- 1画面でスクショ完結する情報構成
-- 共有文はテンプレ3種（short / emotional / night）
-- 無料入口を恋愛状態4択にして自己投影しやすくする
-- 深掘りで回遊率を上げる（ただし2回で止める）
-- deep到達後にだけ有料導線を出し、違和感を減らす
-
-## 7. 30日後に読む人向けの最短理解3ステップ
-
-この章でわかること: まず何を見ればよいか。
-
-1. `app/page.js` → `app/draw/page.js` → `app/result/page.js` → `app/deep/page.js` → `app/premium/intro/page.jsx` を順に読む  
-2. `lib/session/oracleSession.js` で状態保存と制約（診断必須・deep上限）を確認  
-3. `lib/analytics/trackEvent.js` と `app/api/events/route.js` でイベント契約を確認  
+1. `lib/session/oracleSession.js`
+2. `lib/analytics/eventStore.js`
+3. `app/api/events/route.js`
+4. `app/api/analytics/daily/route.js`
+5. `app/api/analytics/funnel/route.js`
+6. `components/premium/PremiumIntroPageClient.jsx`
+7. `components/premium/PremiumCompletePageClient.jsx`
+8. `components/premium/PremiumReadingPageClient.jsx`
