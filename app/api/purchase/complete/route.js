@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { recordEvent } from "../../../../lib/analytics/eventStore";
 import { EVENT_NAMES } from "../../../../lib/analytics/events";
+import { validateAndNormalizeEvent } from "../../../../lib/analytics/eventValidation";
 
 export async function POST(request) {
   try {
@@ -24,7 +25,12 @@ export async function POST(request) {
         source: body?.source || "note"
       }
     };
-    const result = recordEvent(eventBody);
+    const validated = validateAndNormalizeEvent(eventBody);
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.reason }, { status: 400 });
+    }
+
+    const result = recordEvent(validated.value);
     if (!result?.recorded && result?.reason === "duplicate_purchase_attempt") {
       return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
     }
