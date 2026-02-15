@@ -111,6 +111,16 @@ npm run build
 npm run start
 ```
 
+## 日次CV集計API
+
+`GET /api/analytics/daily?date=YYYY-MM-DD`
+
+例:
+
+```bash
+curl "http://localhost:3000/api/analytics/daily?date=2026-02-15"
+```
+
 ## Vercel デプロイ
 
 1. GitHub に push
