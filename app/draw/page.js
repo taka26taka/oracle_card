@@ -27,6 +27,7 @@ export default function DrawPage() {
       router.replace("/");
       return;
     }
+    trackEvent("page_view", { meta: { page: "draw" } });
     setDiagnosisType(nextTheme);
     setSelectedTheme(nextTheme);
     setTheme(nextTheme);

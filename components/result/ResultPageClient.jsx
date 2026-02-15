@@ -25,6 +25,7 @@ export default function ResultPageClient() {
     }
 
     performance.mark("result_title_measure_start");
+    trackEvent("page_view", { meta: { page: "result" } });
     setResult(session.lastResult);
     setBodyVisible(false);
     measuredRef.current = false;

@@ -13,8 +13,16 @@ const toDateKey = (value) => {
 
 const metricLabels = {
   page_view_lp: "page_view(lp)",
+  page_view_draw: "page_view(draw)",
+  page_view_result: "page_view(result)",
+  page_view_deep: "page_view(deep)",
+  page_view_premium_intro: "page_view(premium_intro)",
+  page_view_premium_complete: "page_view(premium_complete)",
   draw_completed: "draw_completed",
   result_viewed: "result_viewed",
+  deep_dive_opened: "deep_dive_opened",
+  premium_intro_viewed: "premium_intro_viewed",
+  premium_checkout_clicked: "premium_checkout_clicked",
   share_clicked: "share_clicked",
   note_click: "note_click",
   purchase_completed: "purchase_completed"

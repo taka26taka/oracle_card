@@ -15,7 +15,16 @@ export async function POST(request) {
       return NextResponse.json({ error: "event is required" }, { status: 400 });
     }
 
-    recordEvent(body);
+    const result = recordEvent(body);
+    if (!result?.recorded && result?.reason === "invalid_event") {
+      return NextResponse.json({ error: "invalid_event" }, { status: 400 });
+    }
+    if (!result?.recorded && result?.reason === "invalid_purchase_attempt") {
+      return NextResponse.json({ error: "invalid_purchase_attempt" }, { status: 400 });
+    }
+    if (!result?.recorded && result?.reason === "duplicate_purchase_attempt") {
+      return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
+    }
 
     console.log("[event]", {
       event: body.event,

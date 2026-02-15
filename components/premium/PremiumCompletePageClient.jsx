@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getSessionState } from "../../lib/session/oracleSession";
+import { clearCheckoutAttempt, getSessionState } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import PageFrame from "../ui/PageFrame";
 
@@ -12,26 +12,38 @@ export default function PremiumCompletePageClient() {
 
   useEffect(() => {
     if (trackedRef.current) return;
+    trackedRef.current = true;
 
     const session = getSessionState();
     const params = typeof window === "undefined" ? new URLSearchParams() : new URLSearchParams(window.location.search);
+    const attemptId = params.get("attemptId") || session?.checkoutAttempt?.attemptId || "";
     const diagnosisType =
       params.get("diagnosisType") || session?.diagnosisType || session?.lastResult?.diagnosisType || session?.lastResult?.theme || "";
     const price = params.get("price") || "";
     const sessionId = session?.sessionId || "unknown";
 
-    trackEvent("purchase_completed", {
-      theme: session?.lastResult?.theme,
-      cardId: session?.lastResult?.card?.id,
-      meta: {
+    trackEvent("page_view", { meta: { page: "premium_complete" } });
+    if (!attemptId) return;
+
+    fetch("/api/purchase/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attemptId,
         sessionId,
         diagnosisType,
         price,
-        source: "note"
-      }
-    });
-
-    trackedRef.current = true;
+        source: params.get("source") || "note",
+        theme: session?.lastResult?.theme,
+        cardId: session?.lastResult?.card?.id
+      })
+    })
+      .then((res) => {
+        if (res.ok) clearCheckoutAttempt();
+      })
+      .catch(() => {
+        // keep UX regardless of tracking errors
+      });
   }, []);
 
   return (

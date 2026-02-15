@@ -34,6 +34,7 @@ export default function DeepPageClient() {
       return;
     }
 
+    trackEvent("page_view", { meta: { page: "deep" } });
     setResult(session.lastResult);
     setDeepMessage(session.lastResult.deepMessage || "");
     setDeepCount(session.deepCount || 0);

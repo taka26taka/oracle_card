@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { getSessionState } from "../../lib/session/oracleSession";
+import { getSessionState, startCheckoutAttempt } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import PageFrame from "../ui/PageFrame";
 import PremiumDiffTable from "./PremiumDiffTable";
@@ -12,27 +12,46 @@ const CHECKOUT_URL = process.env.NEXT_PUBLIC_CHECKOUT_URL || "";
 export default function PremiumIntroPageClient() {
   const router = useRouter();
   const ready = Boolean(CHECKOUT_URL);
+  const session = useMemo(() => getSessionState(), []);
 
   useEffect(() => {
-    const session = getSessionState();
     if (!session?.lastResult?.card?.id) {
       router.replace("/");
       return;
     }
 
+    trackEvent("page_view", { meta: { page: "premium_intro" } });
     trackEvent("premium_intro_viewed", {
       theme: session.lastResult.theme,
       cardId: session.lastResult.card.id
     });
-  }, [router]);
+  }, [router, session]);
 
   const onCheckoutClick = () => {
     if (!ready) return;
-    const session = getSessionState();
+    const nextState = startCheckoutAttempt("premium_intro");
+    const attemptId = nextState?.checkoutAttempt?.attemptId || "";
+    const sessionId = nextState?.sessionId || "unknown";
+    const diagnosisType = nextState?.lastResult?.diagnosisType || nextState?.lastResult?.theme || "";
+
+    let nextCheckoutUrl = CHECKOUT_URL;
+    try {
+      const checkoutUrl = new URL(CHECKOUT_URL);
+      checkoutUrl.searchParams.set("attemptId", attemptId);
+      checkoutUrl.searchParams.set("sessionId", sessionId);
+      checkoutUrl.searchParams.set("diagnosisType", diagnosisType);
+      checkoutUrl.searchParams.set("source", "premium_intro");
+      nextCheckoutUrl = checkoutUrl.toString();
+    } catch {
+      return;
+    }
+
     trackEvent("premium_checkout_clicked", {
-      theme: session?.lastResult?.theme,
-      cardId: session?.lastResult?.card?.id
+      theme: nextState?.lastResult?.theme,
+      cardId: nextState?.lastResult?.card?.id,
+      meta: { attemptId }
     });
+    window.open(nextCheckoutUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -47,15 +66,13 @@ export default function PremiumIntroPageClient() {
         <PremiumDiffTable />
 
         {ready ? (
-          <a
+          <button
+            type="button"
             className="mt-5 inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-slate-700 px-5 py-3 text-sm text-white"
-            href={CHECKOUT_URL}
-            target="_blank"
-            rel="noopener noreferrer"
             onClick={onCheckoutClick}
           >
             noteで購入して続きを読む
-          </a>
+          </button>
         ) : (
           <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">現在準備中です</div>
         )}
