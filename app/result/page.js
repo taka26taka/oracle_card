@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildShareText, THEME_LABELS, toDateText } from "../../lib/reading/viralCopy";
 import { getSessionState } from "../../lib/session/oracleSession";
@@ -11,6 +11,8 @@ export default function ResultPage() {
   const [result, setResult] = useState(null);
   const [bodyVisible, setBodyVisible] = useState(false);
   const [template, setTemplate] = useState("short");
+  const titleRef = useRef(null);
+  const measuredRef = useRef(false);
 
   useEffect(() => {
     const session = getSessionState();
@@ -19,19 +21,32 @@ export default function ResultPage() {
       return;
     }
 
+    performance.mark("result_title_measure_start");
     setResult(session.lastResult);
-
-    const started = performance.now();
-    requestAnimationFrame(() => {
-      const firstPaintMs = Math.round(performance.now() - started);
-      trackEvent("result_first_paint", {
-        theme: session.lastResult.theme,
-        cardId: session.lastResult.card.id,
-        meta: { firstPaintMs, under500: firstPaintMs <= 500 }
-      });
-      setBodyVisible(true);
-    });
+    setBodyVisible(false);
+    measuredRef.current = false;
   }, [router]);
+
+  useEffect(() => {
+    if (!result || !titleRef.current || measuredRef.current) return;
+
+    performance.mark("result_title_rendered");
+    performance.measure("result_title_paint", "result_title_measure_start", "result_title_rendered");
+    const entries = performance.getEntriesByName("result_title_paint");
+    const firstPaintMs = Math.round(entries[entries.length - 1]?.duration || 0);
+
+    trackEvent("result_first_paint", {
+      theme: result.theme,
+      cardId: result.card.id,
+      meta: { firstPaintMs, under500: firstPaintMs <= 500 }
+    });
+
+    measuredRef.current = true;
+    setBodyVisible(true);
+    performance.clearMeasures("result_title_paint");
+    performance.clearMarks("result_title_measure_start");
+    performance.clearMarks("result_title_rendered");
+  }, [result]);
 
   const shareUrl = useMemo(() => {
     if (!result) return "#";
@@ -74,7 +89,9 @@ export default function ResultPage() {
       <section className="mx-auto w-full max-w-[375px]">
         <article className="rounded-[1.9rem] border border-rose-100 bg-white p-5 shadow-[0_20px_56px_rgba(148,163,184,0.24)]">
           <p className="text-center text-[0.68rem] tracking-[0.24em] text-slate-500">FOR YOU TONIGHT</p>
-          <h1 className="mt-3 text-center font-serif-jp text-[1.45rem] leading-tight text-slate-800">{result.title}</h1>
+          <h1 ref={titleRef} className="mt-3 text-center font-serif-jp text-[1.45rem] leading-tight text-slate-800">
+            {result.title}
+          </h1>
           <p className="mt-2 text-center text-xs text-slate-500">{THEME_LABELS[result.theme]}</p>
 
           <div className="mt-4 rounded-2xl border border-rose-100/80 bg-gradient-to-b from-rose-50/60 via-white to-amber-50/50 p-4">

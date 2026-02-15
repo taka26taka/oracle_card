@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ensureSession, getSessionState, setSelectedTheme } from "../lib/session/oracleSession";
+import { ensureSession, resetSelectedTheme, setSelectedTheme } from "../lib/session/oracleSession";
 import { trackEvent } from "../lib/analytics/trackEvent";
 
 export default function Home() {
@@ -20,6 +20,9 @@ export default function Home() {
 
   useEffect(() => {
     const session = ensureSession();
+    resetSelectedTheme();
+    setTheme("");
+
     const revisitInfo = session?.revisitInfo;
     if (revisitInfo?.isRevisit) {
       trackEvent("revisit_detected", {
@@ -28,13 +31,6 @@ export default function Home() {
       });
     }
   }, []);
-
-  useEffect(() => {
-    const storedTheme = getSessionState()?.selectedTheme;
-    if (storedTheme && themes.some((item) => item.key === storedTheme)) {
-      setTheme(storedTheme);
-    }
-  }, [themes]);
 
   const handleThemeSelect = (nextTheme) => {
     setTheme(nextTheme);

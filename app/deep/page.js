@@ -81,7 +81,7 @@ export default function DeepPage() {
     setDeepCount(next.deepCount || 0);
     setDeepMessage(nextDeepMessage);
 
-    trackEvent("deep_dive_opened", {
+    trackEvent("deep_focus_selected", {
       theme: result.theme,
       cardId: result.card.id,
       deepTheme: focus,
