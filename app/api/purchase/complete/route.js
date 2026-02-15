@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { recordEvent } from "../../../../lib/analytics/eventStore";
+import { EVENT_NAMES } from "../../../../lib/analytics/events";
 
 export async function POST(request) {
   try {
@@ -10,7 +11,7 @@ export async function POST(request) {
     }
 
     const eventBody = {
-      event: "purchase_completed",
+      event: EVENT_NAMES.PURCHASE_COMPLETED,
       sessionId: body?.sessionId || "unknown",
       ts: new Date().toISOString(),
       path: "/premium/complete",
