@@ -121,6 +121,18 @@ npm run start
 curl "http://localhost:3000/api/analytics/daily?date=2026-02-15"
 ```
 
+ABテスト条件での絞り込み:
+
+```bash
+curl "http://localhost:3000/api/analytics/daily?date=2026-02-15&experiment_id=lp_copy_test&variant=B"
+```
+
+期間ファネル集計:
+
+```bash
+curl "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=2026-02-15"
+```
+
 ## Vercel デプロイ
 
 1. GitHub に push

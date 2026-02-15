@@ -1,0 +1,22 @@
+import { NextResponse } from "next/server";
+import { getFunnelStats } from "../../../../lib/analytics/eventStore";
+
+const toDateText = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+export async function GET(request) {
+  const dateFrom = toDateText(request.nextUrl.searchParams.get("date_from")) || toDateText(new Date());
+  const dateTo = toDateText(request.nextUrl.searchParams.get("date_to")) || dateFrom;
+  const experimentId = (request.nextUrl.searchParams.get("experiment_id") || "").trim();
+  const variant = (request.nextUrl.searchParams.get("variant") || "").trim();
+
+  const stats = getFunnelStats({ dateFrom, dateTo, experimentId, variant });
+  return NextResponse.json({ ok: true, stats }, { status: 200 });
+}
