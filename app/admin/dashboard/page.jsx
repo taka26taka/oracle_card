@@ -98,6 +98,26 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="mt-5 grid gap-2">
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <span className="text-sm text-slate-700">CV: LP→draw</span>
+                <span className="text-sm font-semibold text-slate-800">{stats?.cv?.lp_to_draw ?? 0}%</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <span className="text-sm text-slate-700">CV: draw→result</span>
+                <span className="text-sm font-semibold text-slate-800">{stats?.cv?.draw_to_result ?? 0}%</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <span className="text-sm text-slate-700">CV: result→premium intro</span>
+                <span className="text-sm font-semibold text-slate-800">{stats?.cv?.result_to_premium_intro ?? 0}%</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <span className="text-sm text-slate-700">CV: premium intro→checkout</span>
+                <span className="text-sm font-semibold text-slate-800">{stats?.cv?.premium_intro_to_checkout ?? 0}%</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <span className="text-sm text-slate-700">CV: checkout→purchase</span>
+                <span className="text-sm font-semibold text-slate-800">{stats?.cv?.checkout_to_purchase ?? 0}%</span>
+              </div>
               <div className="flex items-center justify-between rounded-lg border border-rose-100 bg-rose-50/60 px-3 py-2">
                 <span className="text-sm text-slate-700">CV: result→note</span>
                 <span className="text-sm font-semibold text-slate-800">{stats?.cv?.result_to_note ?? 0}%</span>
