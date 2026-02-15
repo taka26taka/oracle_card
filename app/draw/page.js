@@ -49,7 +49,9 @@ export default function DrawPage() {
     const started = Date.now();
 
     const card = pickRandomCard();
-    let message = "今は答えを急がず、あなたの気持ちを大切にする夜にしてください。";
+    let message = "未読や沈黙が続いても、関係の温度差は連絡の工夫で変えられます。";
+    let actionTip = buildActionTip(theme, diagnosisType || theme);
+    let afterglowLine = buildAfterglowLine(card, theme, diagnosisType || theme);
 
     try {
       const res = await fetch("/api/reading", {
@@ -59,6 +61,8 @@ export default function DrawPage() {
       });
       const data = await res.json();
       if (data?.message) message = data.message;
+      if (data?.actionTip) actionTip = data.actionTip;
+      if (data?.afterglowLine) afterglowLine = data.afterglowLine;
     } catch {
       // keep fallback
     }
@@ -73,9 +77,6 @@ export default function DrawPage() {
     const projectionPrompt = prompts.length
       ? prompts[Math.floor(Math.random() * prompts.length)]
       : "本当は何を待っていますか？";
-    const actionTip = buildActionTip(theme);
-    const afterglowLine = buildAfterglowLine(card, theme);
-
     const elapsed = Date.now() - started;
     const wait = Math.max(DRAW_DELAY_MS - elapsed, 0);
     await new Promise((resolve) => setTimeout(resolve, wait));
