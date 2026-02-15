@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSessionState, setThreeCardResult } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import PageFrame from "../ui/PageFrame";
 
 export default function PremiumReadingPageClient() {
@@ -20,8 +21,8 @@ export default function PremiumReadingPageClient() {
       return;
     }
 
-    trackEvent("page_view", { meta: { page: "premium_reading" } });
-    trackEvent("premium_reading_viewed", {
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.PREMIUM_READING } });
+    trackEvent(EVENT_NAMES.PREMIUM_READING_VIEWED, {
       theme: session?.lastResult?.theme,
       cardId: session?.lastResult?.card?.id
     });
@@ -48,7 +49,7 @@ export default function PremiumReadingPageClient() {
 
         setResult(data.result);
         setThreeCardResult(data.result);
-        trackEvent("premium_three_card_generated", {
+        trackEvent(EVENT_NAMES.PREMIUM_THREE_CARD_GENERATED, {
           theme: session?.lastResult?.theme,
           cardId: session?.lastResult?.card?.id
         });

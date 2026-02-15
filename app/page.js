@@ -8,6 +8,7 @@ import {
   setDiagnosisType
 } from "../lib/session/oracleSession";
 import { trackEvent } from "../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../lib/analytics/events";
 
 export default function Home() {
   const router = useRouter();
@@ -26,11 +27,11 @@ export default function Home() {
     const session = ensureSession();
     resetDiagnosisType();
     setDiagnosis("");
-    trackEvent("page_view", { meta: { page: "lp" } });
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.LP } });
 
     const revisitInfo = session?.revisitInfo;
     if (revisitInfo?.isRevisit) {
-      trackEvent("revisit_detected", {
+      trackEvent(EVENT_NAMES.REVISIT_DETECTED, {
         daysSinceLastVisit: revisitInfo.daysSinceLastVisit,
         streakDays: revisitInfo.streakDays
       });
@@ -40,12 +41,12 @@ export default function Home() {
   const handleDiagnosisSelect = (nextDiagnosisType) => {
     setDiagnosis(nextDiagnosisType);
     setDiagnosisType(nextDiagnosisType);
-    trackEvent("theme_selected", { theme: nextDiagnosisType });
+    trackEvent(EVENT_NAMES.THEME_SELECTED, { theme: nextDiagnosisType });
   };
 
   const goDraw = () => {
     if (!diagnosisType) return;
-    trackEvent("diagnosis_completed", { diagnosisType });
+    trackEvent(EVENT_NAMES.DIAGNOSIS_COMPLETED, { diagnosisType });
     router.push(`/draw?diagnosisType=${encodeURIComponent(diagnosisType)}`);
   };
 

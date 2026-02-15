@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { buildQuoteLine, buildShareText, THEME_LABELS, toDateText } from "../../lib/reading/viralCopy";
 import { getSessionState, setPremiumIntent } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import { getNoteUrlByDiagnosisType } from "../../lib/monetization/noteMap";
 import PageFrame from "../ui/PageFrame";
 import PremiumCtaCard from "../premium/PremiumCtaCard";
@@ -25,7 +26,7 @@ export default function ResultPageClient() {
     }
 
     performance.mark("result_title_measure_start");
-    trackEvent("page_view", { meta: { page: "result" } });
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.RESULT } });
     setResult(session.lastResult);
     setBodyVisible(false);
     measuredRef.current = false;
@@ -39,12 +40,12 @@ export default function ResultPageClient() {
     const entries = performance.getEntriesByName("result_title_paint");
     const firstPaintMs = Math.round(entries[entries.length - 1]?.duration || 0);
 
-    trackEvent("result_first_paint", {
+    trackEvent(EVENT_NAMES.RESULT_FIRST_PAINT, {
       theme: result.theme,
       cardId: result.card.id,
       meta: { firstPaintMs, under500: firstPaintMs <= 500 }
     });
-    trackEvent("result_viewed", {
+    trackEvent(EVENT_NAMES.RESULT_VIEWED, {
       theme: result.theme,
       cardId: result.card.id,
       meta: { firstPaintMs, under500: firstPaintMs <= 500 }
@@ -89,7 +90,7 @@ export default function ResultPageClient() {
 
   const onShare = () => {
     if (!result) return;
-    trackEvent("share_clicked", {
+    trackEvent(EVENT_NAMES.SHARE_CLICKED, {
       theme: result.theme,
       cardId: result.card.id,
       meta: {
@@ -102,18 +103,18 @@ export default function ResultPageClient() {
 
   const openDeep = () => {
     if (!result) return;
-    trackEvent("deep_dive_opened", { theme: result.theme, cardId: result.card.id });
+    trackEvent(EVENT_NAMES.DEEP_DIVE_OPENED, { theme: result.theme, cardId: result.card.id });
     router.push("/deep");
   };
 
   const onScreenshotIntent = () => {
     if (!result) return;
-    trackEvent("screenshot_intent", { theme: result.theme, cardId: result.card.id });
+    trackEvent(EVENT_NAMES.SCREENSHOT_INTENT, { theme: result.theme, cardId: result.card.id });
   };
 
   const openPremiumIntro = () => {
     if (!result) return;
-    trackEvent("premium_cta_clicked", {
+    trackEvent(EVENT_NAMES.PREMIUM_CTA_CLICKED, {
       theme: result.theme,
       cardId: result.card.id,
       meta: { source: "result" }
@@ -125,7 +126,7 @@ export default function ResultPageClient() {
   const onNoteClick = () => {
     if (!result) return;
     const sessionId = getSessionState()?.sessionId || "unknown";
-    trackEvent("note_click", {
+    trackEvent(EVENT_NAMES.NOTE_CLICK, {
       theme: result.theme,
       cardId: result.card.id,
       meta: {

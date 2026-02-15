@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { buildShareText, THEME_LABELS } from "../../lib/reading/viralCopy";
 import { getSessionState, setDeepResult, setPremiumIntent } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import PageFrame from "../ui/PageFrame";
 import PremiumCtaCard from "../premium/PremiumCtaCard";
 
@@ -34,7 +35,7 @@ export default function DeepPageClient() {
       return;
     }
 
-    trackEvent("page_view", { meta: { page: "deep" } });
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.DEEP } });
     setResult(session.lastResult);
     setDeepMessage(session.lastResult.deepMessage || "");
     setDeepCount(session.deepCount || 0);
@@ -85,7 +86,7 @@ export default function DeepPageClient() {
     setDeepCount(next.deepCount || 0);
     setDeepMessage(nextDeepMessage);
 
-    trackEvent("deep_focus_selected", {
+    trackEvent(EVENT_NAMES.DEEP_FOCUS_SELECTED, {
       theme: result.theme,
       cardId: result.card.id,
       deepTheme: focus,
@@ -97,7 +98,7 @@ export default function DeepPageClient() {
 
   const openPremiumIntro = () => {
     if (!result) return;
-    trackEvent("premium_cta_clicked", {
+    trackEvent(EVENT_NAMES.PREMIUM_CTA_CLICKED, {
       theme: result.theme,
       cardId: result.card.id,
       meta: { source: "deep_limit" }
@@ -147,7 +148,7 @@ export default function DeepPageClient() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() =>
-              trackEvent("share_clicked", {
+              trackEvent(EVENT_NAMES.SHARE_CLICKED, {
                 theme: result.theme,
                 cardId: result.card.id,
                 meta: { template: "night", source: "deep" }

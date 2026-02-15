@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { getSessionState, startCheckoutAttempt } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import PageFrame from "../ui/PageFrame";
 import PremiumDiffTable from "./PremiumDiffTable";
 
@@ -20,8 +21,8 @@ export default function PremiumIntroPageClient() {
       return;
     }
 
-    trackEvent("page_view", { meta: { page: "premium_intro" } });
-    trackEvent("premium_intro_viewed", {
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.PREMIUM_INTRO } });
+    trackEvent(EVENT_NAMES.PREMIUM_INTRO_VIEWED, {
       theme: session.lastResult.theme,
       cardId: session.lastResult.card.id
     });
@@ -46,7 +47,7 @@ export default function PremiumIntroPageClient() {
       return;
     }
 
-    trackEvent("premium_checkout_clicked", {
+    trackEvent(EVENT_NAMES.PREMIUM_CHECKOUT_CLICKED, {
       theme: nextState?.lastResult?.theme,
       cardId: nextState?.lastResult?.card?.id,
       meta: { attemptId }

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { clearCheckoutAttempt, getSessionState } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import PageFrame from "../ui/PageFrame";
 
 export default function PremiumCompletePageClient() {
@@ -22,7 +23,7 @@ export default function PremiumCompletePageClient() {
     const price = params.get("price") || "";
     const sessionId = session?.sessionId || "unknown";
 
-    trackEvent("page_view", { meta: { page: "premium_complete" } });
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.PREMIUM_COMPLETE } });
     if (!attemptId) return;
 
     fetch("/api/purchase/complete", {

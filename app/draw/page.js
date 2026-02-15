@@ -7,6 +7,7 @@ import { generateViralTitle } from "../../lib/reading/generateViralTitle";
 import { buildActionTip, buildAfterglowLine, THEME_LABELS } from "../../lib/reading/viralCopy";
 import { getSessionState, setDiagnosisType, setLastResult } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 
 const DRAW_DELAY_MS = 760;
 
@@ -27,7 +28,7 @@ export default function DrawPage() {
       router.replace("/");
       return;
     }
-    trackEvent("page_view", { meta: { page: "draw" } });
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.DRAW } });
     setDiagnosisType(nextTheme);
     setTheme(nextTheme);
     setDiagnosis(nextTheme);
@@ -96,8 +97,8 @@ export default function DrawPage() {
     };
 
     setLastResult(result);
-    trackEvent("draw_executed", { theme, cardId: card.id, meta: { delayMs: DRAW_DELAY_MS } });
-    trackEvent("draw_completed", { theme, cardId: card.id, meta: { delayMs: DRAW_DELAY_MS } });
+    trackEvent(EVENT_NAMES.DRAW_EXECUTED, { theme, cardId: card.id, meta: { delayMs: DRAW_DELAY_MS } });
+    trackEvent(EVENT_NAMES.DRAW_COMPLETED, { theme, cardId: card.id, meta: { delayMs: DRAW_DELAY_MS } });
     router.replace("/result");
   };
 
