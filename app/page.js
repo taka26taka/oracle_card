@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   ensureSession,
   resetDiagnosisType,
-  setDiagnosisType
+  setDiagnosisType,
+  setExperimentContext
 } from "../lib/session/oracleSession";
 import { trackEvent } from "../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../lib/analytics/events";
@@ -31,6 +32,7 @@ export default function Home() {
     setDiagnosis("");
     const exp = getLpCopyExperiment(session?.sessionId || "");
     setExperiment(exp);
+    setExperimentContext(exp);
     trackEvent(EVENT_NAMES.PAGE_VIEW, {
       meta: {
         page: PAGE_NAMES.LP,

@@ -136,6 +136,12 @@ curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/daily?da
 curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=2026-02-15"
 ```
 
+AB比較（B-A差分を返す）:
+
+```bash
+curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?date_from=2026-02-01&date_to=2026-02-15&experiment_id=lp_copy_test&compare=1"
+```
+
 購入Webhook受信（サーバー間）:
 
 ```bash
