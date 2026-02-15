@@ -62,36 +62,43 @@
 - 確認: コントラスト・可読性
 
 ### `app/page.js` (`/`)
-- 役割: テーマ選択入口
-- 入出力: `selectedTheme` を保存して `/draw` へ
+- 役割: 恋愛状態診断の入口（4択）
+- 入出力: `diagnosisType` と `selectedTheme` を保存して `/draw` へ
 - 依存先: `lib/session/oracleSession.js`, `lib/analytics/trackEvent.js`
 - 編集: `High risk`
-- 確認: テーマ未選択で進めないこと
+- 確認: 診断未選択で進めないこと
 
 ### `app/draw/page.js` (`/draw`)
 - 役割: 抽選演出と結果データ作成
-- 入出力: `lastResult` を保存して `/result` へ
+- 入出力: `lastResult`（`diagnosisType` 含む）を保存して `/result` へ
 - 依存先: `lib/cards.js`, `lib/reading/*`, `app/api/reading/route.js`
 - 編集: `High risk`
 - 確認: 抽選後に必ず結果遷移するか
 
 ### `app/result/page.js` (`/result`)
-- 役割: 結果表示・共有導線・deep遷移
-- 入出力: `result_first_paint`, `share_clicked`, `deep_dive_opened`
+- 役割: 結果表示・共有導線・deep遷移・premium導線
+- 入出力: `result_first_paint`, `share_clicked`, `deep_dive_opened`, `premium_cta_clicked`
 - 依存先: `lib/session/oracleSession.js`, `lib/reading/viralCopy.js`
 - 編集: `High risk`
 - 確認: タイトル表示計測とイベント名
 
 ### `app/deep/page.js` (`/deep`)
-- 役割: 同カード深掘り（2回制限）
-- 入出力: `deep_focus_selected` と deepCount更新
+- 役割: 同カード深掘り（2回制限）と premium誘導
+- 入出力: `deep_focus_selected`, `premium_cta_clicked`, deepCount更新
 - 依存先: `app/api/reading/route.js`, `lib/session/oracleSession.js`
 - 編集: `High risk`
 - 確認: 深掘り2回上限が守られるか
 
+### `app/premium/intro/page.jsx` (`/premium/intro`)
+- 役割: 無料 vs 有料差分の説明と外部購入導線
+- 入出力: `premium_intro_viewed`, `premium_checkout_clicked`
+- 依存先: `lib/session/oracleSession.js`, `lib/analytics/trackEvent.js`
+- 編集: `Need caution`
+- 確認: セッション未作成時はトップへ戻ること
+
 ### `app/api/reading/route.js`
 - 役割: AIメッセージAPI
-- 入出力: POST `cardName/theme/deepFocus` → `{message}`
+- 入出力: POST `cardName/theme/diagnosisType/deepFocus` → `{message}`
 - 依存先: `lib/ai/oracleMessage.js`
 - 編集: `Need caution`
 - 確認: `cardName` 未指定時 400 になるか
@@ -113,7 +120,7 @@
 ### `lib/ai/oracleMessage.js`
 - 役割: OpenAI呼び出しとフォールバック生成
 - 編集: `Need caution`
-- 確認: APIキーなしでもメッセージ返却
+- 確認: APIキーなしでもメッセージ返却、`diagnosisType` 未指定でも従来挙動
 
 ### `lib/reading/generateViralTitle.js`
 - 役割: ルールベースで意味深タイトル生成
@@ -128,7 +135,7 @@
 ### `lib/session/oracleSession.js`
 - 役割: localStorageセッション管理
 - 編集: `High risk`
-- 確認: `oracle_session_v1` と主要フィールド互換
+- 確認: `oracle_session_v1` と主要フィールド（`selectedTheme`, `diagnosisType`, `lastResult`, `deepCount`, `sessionId`）互換
 
 ### `lib/analytics/trackEvent.js`
 - 役割: `/api/events` へイベント送信
@@ -185,5 +192,8 @@ app/deep/page.js
   └─ lib/reading/viralCopy.js
   └─ app/api/reading/route.js
   └─ lib/analytics/trackEvent.js
-```
 
+app/premium/intro/page.jsx
+  └─ lib/session/oracleSession.js
+  └─ lib/analytics/trackEvent.js
+```

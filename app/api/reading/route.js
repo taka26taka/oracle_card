@@ -6,6 +6,7 @@ export async function POST(request) {
     const body = await request.json();
     const cardName = body?.cardName;
     const theme = body?.theme;
+    const diagnosisType = body?.diagnosisType;
     const deepFocus = body?.deepFocus;
 
     if (!cardName) {
@@ -15,6 +16,7 @@ export async function POST(request) {
     const result = await generateOracleMessage({
       cardName,
       theme,
+      diagnosisType,
       deepFocus,
       apiKey: process.env.OPENAI_API_KEY
     });

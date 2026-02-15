@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { pickRandomCard } from "../../lib/cards";
 import { generateViralTitle } from "../../lib/reading/generateViralTitle";
 import { buildActionTip, buildAfterglowLine, THEME_LABELS } from "../../lib/reading/viralCopy";
-import { getSessionState, setLastResult, setSelectedTheme } from "../../lib/session/oracleSession";
+import { getSessionState, setDiagnosisType, setLastResult, setSelectedTheme } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
 
 const DRAW_DELAY_MS = 760;
@@ -13,21 +13,24 @@ const DRAW_DELAY_MS = 760;
 export default function DrawPage() {
   const router = useRouter();
   const [theme, setTheme] = useState("");
+  const [diagnosisType, setDiagnosis] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const queryTheme =
+    const queryDiagnosisType =
       typeof window === "undefined"
         ? ""
-        : new URLSearchParams(window.location.search).get("theme") || "";
+        : new URLSearchParams(window.location.search).get("diagnosisType") || "";
     const state = getSessionState();
-    const nextTheme = queryTheme || state?.selectedTheme || "";
+    const nextTheme = queryDiagnosisType || state?.diagnosisType || state?.selectedTheme || "";
     if (!nextTheme || !THEME_LABELS[nextTheme]) {
       router.replace("/");
       return;
     }
+    setDiagnosisType(nextTheme);
     setSelectedTheme(nextTheme);
     setTheme(nextTheme);
+    setDiagnosis(nextTheme);
   }, [router]);
 
   const tone = useMemo(() => {
@@ -52,7 +55,7 @@ export default function DrawPage() {
       const res = await fetch("/api/reading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardName: card.name, cardKey: card.key, theme })
+        body: JSON.stringify({ cardName: card.name, cardKey: card.key, theme, diagnosisType: diagnosisType || theme })
       });
       const data = await res.json();
       if (data?.message) message = data.message;
@@ -80,6 +83,7 @@ export default function DrawPage() {
     const result = {
       card,
       theme,
+      diagnosisType: diagnosisType || theme,
       title,
       message,
       actionTip,

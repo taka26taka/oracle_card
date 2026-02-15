@@ -67,6 +67,7 @@ export default function DeepPage() {
           cardName: result.card.name,
           cardKey: result.card.key,
           theme: result.theme,
+          diagnosisType: result.diagnosisType || result.theme,
           deepFocus: focus
         })
       });
@@ -89,6 +90,16 @@ export default function DeepPage() {
     });
 
     setLoading(false);
+  };
+
+  const openPremiumIntro = () => {
+    if (!result) return;
+    trackEvent("premium_cta_clicked", {
+      theme: result.theme,
+      cardId: result.card.id,
+      meta: { source: "deep_limit" }
+    });
+    router.push("/premium/intro");
   };
 
   if (!result) return null;
@@ -149,6 +160,23 @@ export default function DeepPage() {
             トップ戻る
           </button>
         </div>
+
+        {limitReached && (
+          <article className="mt-4 rounded-2xl border border-amber-200/70 bg-gradient-to-b from-amber-50 to-white p-4">
+            <p className="text-xs tracking-[0.16em] text-slate-500">PREMIUM</p>
+            <h2 className="mt-2 font-serif-jp text-lg text-slate-700">3枚で恋の流れを見る</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              無料の深掘りはここまで。過去・現在・未来の3枚で、あなた専用に続きを読み解けます。
+            </p>
+            <button
+              type="button"
+              className="mt-3 w-full rounded-full border border-slate-200 bg-slate-700 px-5 py-3 text-sm text-white"
+              onClick={openPremiumIntro}
+            >
+              あなた専用の3枚リーディングへ
+            </button>
+          </article>
+        )}
       </section>
     </main>
   );
