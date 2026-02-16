@@ -86,6 +86,7 @@ docs/
 - 内部レビュー: `docs/codex-review.md`
 - KPI設計: `docs/kpi-plan.md`
 - リリース運用チェック: `docs/release-operations-checklist.md`
+- リリース当日チェック: `docs/release-day-checklist.md`
 - 次タスク幕ダウン: `docs/next-task-rundown-2026-02-15.md`
 - 実機QAログテンプレート: `docs/mobile-qa-log-template.md`
 
