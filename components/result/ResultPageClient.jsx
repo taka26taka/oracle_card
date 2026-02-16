@@ -7,6 +7,7 @@ import { getSessionState, setPremiumIntent } from "../../lib/session/oracleSessi
 import { trackEvent } from "../../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import { buildTrackedNoteUrl, getNoteUrlByDiagnosisType } from "../../lib/monetization/noteMap";
+import { getResultCtaCopyExperiment } from "../../lib/analytics/experiments";
 import PageFrame from "../ui/PageFrame";
 
 export default function ResultPageClient() {
@@ -16,6 +17,7 @@ export default function ResultPageClient() {
   const [bodyVisible, setBodyVisible] = useState(false);
   const [otherActionsOpen, setOtherActionsOpen] = useState(false);
   const [template, setTemplate] = useState("short");
+  const [ctaCopyVariant, setCtaCopyVariant] = useState("A");
   const titleRef = useRef(null);
   const measuredRef = useRef(false);
 
@@ -31,6 +33,9 @@ export default function ResultPageClient() {
     setResult(session.lastResult);
     setTitleVisible(false);
     setBodyVisible(false);
+    setOtherActionsOpen(false);
+    const ctaCopyExperiment = getResultCtaCopyExperiment(session?.sessionId || "");
+    setCtaCopyVariant(ctaCopyExperiment?.enabled ? ctaCopyExperiment.variant : "A");
     measuredRef.current = false;
   }, [router]);
 
@@ -130,10 +135,24 @@ export default function ResultPageClient() {
     trackEvent(EVENT_NAMES.PREMIUM_CTA_CLICKED, {
       theme: result.theme,
       cardId: result.card.id,
-      meta: { source: "result" }
+      meta: {
+        source: "result",
+        result_cta_variant: ctaCopyVariant
+      }
     });
     setPremiumIntent(true);
     router.push("/premium/intro");
+  };
+
+  const toggleOtherActions = () => {
+    if (!result) return;
+    const next = !otherActionsOpen;
+    setOtherActionsOpen(next);
+    trackEvent(EVENT_NAMES.OTHER_ACTIONS_TOGGLED, {
+      theme: result.theme,
+      cardId: result.card.id,
+      meta: { open: next }
+    });
   };
 
   const onNoteClick = () => {
@@ -231,7 +250,7 @@ export default function ResultPageClient() {
           className="min-h-11 w-full rounded-full border border-amber-300 bg-gradient-to-r from-indigo-700 via-violet-700 to-indigo-900 px-5 py-3 text-sm font-semibold text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
           onClick={openPremiumIntro}
         >
-          あなた専用の3枚リーディングを見る
+          {ctaCopyVariant === "B" ? "いま、3枚リーディングで核心を読む" : "あなた専用の3枚リーディングを見る"}
         </button>
         </div>
       </section>
@@ -240,7 +259,7 @@ export default function ResultPageClient() {
         <button
           type="button"
           className="inline-flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-[0.72rem] tracking-[0.12em] text-slate-600"
-          onClick={() => setOtherActionsOpen((prev) => !prev)}
+          onClick={toggleOtherActions}
           aria-expanded={otherActionsOpen}
           aria-controls="other-actions-panel"
         >

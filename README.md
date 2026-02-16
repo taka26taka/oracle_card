@@ -87,6 +87,7 @@ docs/
 - KPI設計: `docs/kpi-plan.md`
 - リリース運用チェック: `docs/release-operations-checklist.md`
 - 次タスク幕ダウン: `docs/next-task-rundown-2026-02-15.md`
+- 実機QAログテンプレート: `docs/mobile-qa-log-template.md`
 
 ## セットアップ
 
@@ -106,6 +107,7 @@ EVENT_DB_PATH=/tmp/oracle-events.sqlite
 NEXT_PUBLIC_ANALYTICS_DEBUG=0
 ANALYTICS_ADMIN_TOKEN=change_me
 NEXT_PUBLIC_EXPERIMENT_LP_COPY=0
+NEXT_PUBLIC_EXPERIMENT_RESULT_CTA_COPY=0
 PURCHASE_WEBHOOK_TOKEN=change_me
 NEXT_PUBLIC_NOTE_URL_DEFAULT=https://note.com/
 NEXT_PUBLIC_NOTE_URL_MUTUAL=https://note.com/
@@ -166,6 +168,18 @@ curl -H "x-admin-token: change_me" "http://localhost:3000/api/analytics/funnel?d
 集計レスポンスには `cv`（イベント件数ベース）に加えて `user_cv`（ユニークユーザー数ベース）も含まれます。
 `cv` / `user_cv` には `result_to_deep`, `deep_to_premium_intro`, `checkout_to_purchase_success` も含まれます。
 
+定点観測の保存（ローカル）:
+
+```bash
+ANALYTICS_ADMIN_TOKEN=change_me scripts/ops/save_daily_kpi.sh http://localhost:3000 2026-02-16
+```
+
+週次差分確認:
+
+```bash
+scripts/ops/weekly_kpi_diff.sh logs/kpi/daily/2026-02-16.json logs/kpi/daily/2026-02-09.json
+```
+
 購入Webhook受信（サーバー間）:
 
 ```bash
@@ -186,6 +200,7 @@ curl -X POST "http://localhost:3000/api/purchase/webhook" \
    - `EVENT_DB_PATH` (任意, 例: `/tmp/oracle-events.sqlite`)
    - `ANALYTICS_ADMIN_TOKEN` (必須推奨: production未設定時は集計APIが503)
    - `NEXT_PUBLIC_EXPERIMENT_LP_COPY` (任意, `1`でLPコピーABを有効化)
+   - `NEXT_PUBLIC_EXPERIMENT_RESULT_CTA_COPY` (任意, `1`でresult主CTAコピーABを有効化)
    - `PURCHASE_WEBHOOK_TOKEN` (推奨, 購入Webhook認証用)
 4. Deploy
 

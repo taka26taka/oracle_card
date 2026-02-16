@@ -22,6 +22,7 @@ page_view_lp
 - `premium_reading_viewed`
 - `premium_three_card_generated`
 - `draw_executed.meta.delayMs`（儀式演出時間）
+- `other_actions_toggled`（result補助導線の開閉）
 
 ## 2. 集計API
 
@@ -96,4 +97,10 @@ draw演出時間は `draw_executed` の `meta.delayMs` に記録されます。
 
 ```bash
 node -e "const Database=require('better-sqlite3');const db=new Database('/tmp/oracle-events.sqlite',{readonly:true});const rows=db.prepare(\"SELECT json_extract(meta_json,'$.delayMs') AS delayMs FROM events WHERE event='draw_executed' AND delayMs IS NOT NULL ORDER BY id DESC LIMIT 100\").all();console.log(rows);"
+```
+
+日次保存の運用例:
+
+```bash
+ANALYTICS_ADMIN_TOKEN=change_me scripts/ops/save_daily_kpi.sh http://127.0.0.1:3000 2026-02-16
 ```
