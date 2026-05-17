@@ -3,6 +3,27 @@
 初心者向けのシンプルな 1 枚引きオラクルカードサイトです。  
 Next.js(App Router) で構築し、スマホ表示を前提に、余白を活かした軽いスピリチュアルトーンのUIで整えています。
 
+ポートフォリオとしては、単なる占い画面ではなく「LP -> 無料体験 -> 回遊 -> 購入導線 -> 計測 -> 改善」までを小さく閉じたプロダクトとして設計しています。AI生成、フォールバック、イベント分析、外部checkout想定の購入検証まで含めて、実運用に近い形を目指しました。
+
+## このプロジェクトで見せたいこと
+
+- **ユーザー体験設計**: スマホ前提の1枚引き、深掘り2回制限、結果共有、有料導線までの自然な流れ
+- **AI機能の実装**: OpenAI API を使った日本語メッセージ生成と、APIキー未設定・失敗時のフォールバック
+- **収益導線**: 外部 checkout を想定した `attemptId` 発行、Webhook、購入完了検証、3枚リーディング解放
+- **分析基盤**: SQLite にイベントを永続化し、日次・期間ファネル・AB比較を API で取得
+- **保守性**: 画面、AI、計測、セッション、課金導線を分離し、編集ルールとファイルマップを docs に整理
+
+## ポートフォリオ観点の特徴
+
+| 観点 | 実装内容 |
+|---|---|
+| AIアプリ | OpenAI Responses API、プロンプト制御、禁止語チェック、構造化フォールバック |
+| フロントエンド | Next.js App Router、React Client Component、モバイル中心UI |
+| バックエンド | Route Handler、入力検証、管理API認証、Webhook認証 |
+| データ分析 | イベント永続化、CV集計、ユニークユーザーCV、AB比較 |
+| 収益化 | 無料体験から有料導線、checkout attempt、購入完了の整合性検証 |
+| 運用 | KPI保存、週次差分、リリースチェックリスト、編集ルール |
+
 ## 成果物の範囲
 
 - 20 枚のカードデータ
@@ -17,12 +38,53 @@ Next.js(App Router) で構築し、スマホ表示を前提に、余白を活か
 - 日次/期間CV集計API
 - Vercel デプロイ可能構成
 
+## ユーザーフロー
+
+```text
+/                    LP（診断4択 + ABコピー）
+  -> /draw            1枚抽選
+  -> /result          結果、共有、deep、premium導線
+  -> /deep            深掘り（最大2回）
+  -> /premium/intro   有料導線
+  -> 外部checkout
+  -> /premium/complete
+  -> /premium/reading 3枚リーディング
+```
+
+購入完了はフロントの戻り先だけで確定させず、Webhook 経由の `purchase_success` が記録済みの `attemptId` のみ `purchase_completed` として扱います。
+
 ## 技術スタック
 
 - Next.js 14 (App Router)
 - React 18
 - Tailwind CSS (CDN版 `cdn.tailwindcss.com` を利用)
 - Node.js 18+ 推奨
+- better-sqlite3 / SQLite
+- OpenAI Responses API
+
+## アーキテクチャ概要
+
+```text
+Browser
+  |
+  | localStorage: oracle_session_v1
+  | - sessionId / diagnosisType / lastResult
+  | - deepCount / checkoutAttempt / premiumAccess
+  v
+Next.js App Router
+  |
+  | app/          routes, pages, route handlers
+  | components/   client UI and interaction logic
+  | lib/          AI, analytics, session, domain logic
+  | data/         card definitions
+  v
+SQLite events table
+  |
+  v
+Analytics APIs
+```
+
+詳しい設計は `docs/architecture-overview.md` にまとめています。
 
 ## ディレクトリ構成
 
@@ -69,12 +131,20 @@ lib/
   reading/viralCopy.js
   session/oracleSession.js  # localStorage状態管理
 docs/
-  review-spec.md            # AI実装レビュー仕様書
+  architecture-overview.md  # レイヤー/データフロー/設計判断
+  skills.md                 # ポートフォリオ向けスキル整理
+  project-map.md            # ルート/state/API/課金導線の地図
+  system-overview.md        # 保守理解用の全体像
+  file-map.md               # 編集箇所と影響範囲
+  state-design.md           # localStorage state設計
+  monetization-flow.md      # 無料から有料への導線
+  edit-rules.md             # 変更前チェックと契約
 ```
 
 ## ドキュメント
 
 - レビュー仕様書: `docs/review-spec.md`
+- スキル整理: `docs/skills.md`
 - プロジェクト全体マップ: `docs/project-map.md`
 - アーキテクチャ概要: `docs/architecture-overview.md`
 - システム全体像: `docs/system-overview.md`
@@ -103,6 +173,7 @@ cp .env.example .env.local
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4.1-mini
 OPENAI_MAX_OUTPUT_TOKENS=260
+NEXT_PUBLIC_CHECKOUT_URL=
 NEXT_PUBLIC_CHECKOUT_RETURN_PARAM=redirect_url
 EVENT_DB_PATH=/tmp/oracle-events.sqlite
 NEXT_PUBLIC_ANALYTICS_DEBUG=0
@@ -137,6 +208,14 @@ npm run dev
 npm run build
 npm run start
 ```
+
+## 統合テスト（スモーク）
+
+```bash
+npm run test:integration
+```
+
+このテストは `next dev` を一時起動し、`/api/reading` と `/api/events` の主要経路を確認します。
 
 ## 日次CV集計API
 
