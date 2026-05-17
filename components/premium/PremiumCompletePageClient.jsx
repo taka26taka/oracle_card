@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getSessionState } from "../../lib/session/oracleSession";
+import { clearCheckoutAttempt, getSessionState, grantPremiumAccess } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
+import { EVENT_NAMES, PAGE_NAMES } from "../../lib/analytics/events";
 import PageFrame from "../ui/PageFrame";
 
 export default function PremiumCompletePageClient() {
@@ -12,26 +13,44 @@ export default function PremiumCompletePageClient() {
 
   useEffect(() => {
     if (trackedRef.current) return;
+    trackedRef.current = true;
 
     const session = getSessionState();
     const params = typeof window === "undefined" ? new URLSearchParams() : new URLSearchParams(window.location.search);
+    const attemptId = params.get("attemptId") || session?.checkoutAttempt?.attemptId || "";
     const diagnosisType =
       params.get("diagnosisType") || session?.diagnosisType || session?.lastResult?.diagnosisType || session?.lastResult?.theme || "";
     const price = params.get("price") || "";
     const sessionId = session?.sessionId || "unknown";
 
-    trackEvent("purchase_completed", {
-      theme: session?.lastResult?.theme,
-      cardId: session?.lastResult?.card?.id,
-      meta: {
+    trackEvent(EVENT_NAMES.PAGE_VIEW, { meta: { page: PAGE_NAMES.PREMIUM_COMPLETE } });
+    if (!attemptId) return;
+
+    fetch("/api/purchase/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attemptId,
         sessionId,
         diagnosisType,
         price,
-        source: "note"
-      }
-    });
-
-    trackedRef.current = true;
+        source: params.get("source") || "note",
+        theme: session?.lastResult?.theme,
+        cardId: session?.lastResult?.card?.id
+      })
+    })
+      .then((res) => {
+        if (res.ok) {
+          grantPremiumAccess({
+            attemptId,
+            source: params.get("source") || "note"
+          });
+          clearCheckoutAttempt();
+        }
+      })
+      .catch(() => {
+        // keep UX regardless of tracking errors
+      });
   }, []);
 
   return (
@@ -47,9 +66,16 @@ export default function PremiumCompletePageClient() {
           <button
             type="button"
             className="w-full rounded-full border border-slate-200 bg-slate-700 px-5 py-3 text-sm text-white"
+            onClick={() => router.push("/premium/reading")}
+          >
+            3枚リーディングを見る
+          </button>
+          <button
+            type="button"
+            className="w-full rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-600"
             onClick={() => router.push("/result")}
           >
-            結果画面へ戻る
+            無料結果へ戻る
           </button>
           <button
             type="button"

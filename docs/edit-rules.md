@@ -12,16 +12,17 @@
 - premium導線は `/result` と `/deep`（2回到達時）を維持
 - イベント名の契約を維持
 - APIの必須入力（`cardName` など）を壊さない
+- 購入完了は `attemptId` 検証を維持（存在/TTL/重複）
 
 ## 2. 壊れやすい箇所
 
 この章でわかること: ミスしやすい具体場所。
 
-### `app/result/page.js`
-- 理由: `result_first_paint` 計測と `deep_dive_opened` / `premium_cta_clicked` がKPIに直結
+### `components/result/ResultPageClient.jsx`
+- 理由: `result_first_paint` / `result_viewed` / `note_click` / `premium_cta_clicked` がKPIに直結
 - 注意: 計測イベントの意味を混ぜない
 
-### `app/deep/page.js`
+### `components/deep/DeepPageClient.jsx`
 - 理由: 深掘り2回制限と `deep_focus_selected` / `premium_cta_clicked` がある
 - 注意: `deep_dive_opened` と再利用しない
 
@@ -29,9 +30,13 @@
 - 理由: localStorageキーと制約ロジックの中心
 - 注意: `oracle_session_v1` と `selectedTheme/diagnosisType/lastResult/deepCount/sessionId` の互換性
 
-### `app/premium/intro/page.jsx`
-- 理由: `premium_intro_viewed` と `premium_checkout_clicked` を送る
-- 注意: 外部リンク導線は残し、決済実装を混ぜない
+### `components/premium/PremiumIntroPageClient.jsx`
+- 理由: `premium_intro_viewed` と `premium_checkout_clicked`（attemptId発行）がある
+- 注意: checkout URL組み立て時に `attemptId/sessionId` を落とさない
+
+### `lib/analytics/eventStore.js`
+- 理由: DB保存、集計、購入完了検証の中心
+- 注意: 正規化キーとCV計算式を変更する場合、APIとKPI定義を同時更新
 
 ### `lib/reading/viralCopy.js`
 - 理由: テーマキーと共有文に強く依存
@@ -67,6 +72,9 @@
 - `premium_cta_clicked`
 - `premium_intro_viewed`
 - `premium_checkout_clicked`
+- `purchase_completed`
+- `result_viewed`
+- `note_click`
 
 ### 4.2 KPIイベントの意味を混ぜない
 
@@ -75,6 +83,7 @@
 - `premium_cta_clicked`: resultかdeep(2回到達)からpremium導線を押した時のみ
 - `premium_intro_viewed`: premium introを表示した時のみ
 - `premium_checkout_clicked`: premium introの外部購入リンクを押した時のみ
+- `purchase_completed`: 購入完了の確定時のみ（attemptId必須）
 
 ### 4.3 制約の維持
 
@@ -82,6 +91,7 @@
 - 深掘り2回まで
 - deep 2回到達前は premium CTA を deep に出しすぎない
 - `cards.json` は追加中心（既存キー削除は避ける）
+- `ANALYTICS_ADMIN_TOKEN` / `PURCHASE_WEBHOOK_TOKEN` を本番で設定
 
 ## 5. 今後追加しやすい場所（拡張ポイント）
 
@@ -89,10 +99,11 @@
 
 - 新しいコピー生成: `lib/reading/`
 - 新しい計測: `lib/analytics/trackEvent.js` + `app/api/events/route.js`
+- 集計追加: `lib/analytics/eventStore.js` + `app/api/analytics/*`
 - 新しい画面: `app/<new-route>/page.js`
 - 新しいカード属性: `data/cards.json`（追加のみ）
 - 外部連携（将来）: `app/api/` に新規route追加
-- 有料導線文言: `app/result/page.js` / `app/deep/page.js` / `app/premium/intro/page.jsx`
+- 有料導線文言: `components/result/ResultPageClient.jsx` / `components/deep/DeepPageClient.jsx` / `components/premium/PremiumIntroPageClient.jsx`
 
 ## 6. PR前チェックリスト
 
@@ -106,6 +117,7 @@
 - [ ] `/result` と `/deep`(2回到達時) で `premium_cta_clicked` が送られる
 - [ ] `/premium/intro` で `premium_intro_viewed` が送られる
 - [ ] `/premium/intro` の購入ボタンで `premium_checkout_clicked` が送られる
+- [ ] `/premium/complete` で `purchase_completed` が記録される
 - [ ] 深掘り2回上限が効く
-- [ ] `result_first_paint` が送られる
+- [ ] `result_first_paint` と `result_viewed` が送られる
 - [ ] READMEのドキュメントリンクが壊れていない

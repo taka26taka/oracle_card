@@ -19,7 +19,7 @@
 
 ### `.env.example`
 - 役割: 必須環境変数の雛形
-- 重要: `NEXT_PUBLIC_CHECKOUT_URL`
+- 重要: `EVENT_DB_PATH`, `ANALYTICS_ADMIN_TOKEN`, `PURCHASE_WEBHOOK_TOKEN`
 - ラベル: `Need caution`
 
 ### `next.config.mjs` / `jsconfig.json` / `vercel.json`
@@ -29,8 +29,8 @@
 ## app/
 
 ### `app/page.js` (`/`)
-- 役割: 恋愛状態診断4択
-- 出力: `diagnosisType` 保存、`/draw` へ遷移
+- 役割: LP本体（診断4択 + ABコピー）
+- 出力: `diagnosisType` 保存、`experimentContext` 保存、`/draw` へ遷移
 - ラベル: `High risk`
 
 ### `app/draw/page.js` (`/draw`)
@@ -50,6 +50,18 @@
 - 役割: エントリ（実体は `components/premium/PremiumIntroPageClient.jsx`）
 - ラベル: `Need caution`
 
+### `app/premium/complete/page.jsx` (`/premium/complete`)
+- 役割: エントリ（実体は `components/premium/PremiumCompletePageClient.jsx`）
+- ラベル: `Need caution`
+
+### `app/premium/reading/page.jsx` (`/premium/reading`)
+- 役割: エントリ（実体は `components/premium/PremiumReadingPageClient.jsx`）
+- ラベル: `Need caution`
+
+### `app/admin/dashboard/page.jsx` (`/admin/dashboard`)
+- 役割: 管理向け簡易確認画面
+- ラベル: `Safe to edit`
+
 ### `app/api/reading/route.js`
 - 役割: AIメッセージAPI
 - input: `cardName`, `theme`, `diagnosisType?`, `deepFocus?`
@@ -58,6 +70,26 @@
 ### `app/api/events/route.js`
 - 役割: イベント受信API
 - ラベル: `Need caution`
+
+### `app/api/analytics/daily/route.js`
+- 役割: 日次集計API（admin token保護）
+- ラベル: `Need caution`
+
+### `app/api/analytics/funnel/route.js`
+- 役割: 期間ファネル集計API（admin token保護、AB比較対応）
+- ラベル: `Need caution`
+
+### `app/api/purchase/complete/route.js`
+- 役割: フロント経由の購入完了記録API
+- ラベル: `High risk`
+
+### `app/api/purchase/webhook/route.js`
+- 役割: サーバー間購入完了Webhook
+- ラベル: `High risk`
+
+### `app/api/premium/three-card/route.js`
+- 役割: 購入済みattempt検証後に3枚リーディングを生成
+- ラベル: `High risk`
 
 ### `app/layout.js` / `app/globals.css`
 - 役割: 共通レイアウトと全体スタイル
@@ -74,7 +106,15 @@
 - ラベル: `High risk`
 
 ### `components/premium/PremiumIntroPageClient.jsx`
-- 役割: premium案内本体、checkout URL制御
+- 役割: premium案内本体、checkout attempt発行と遷移
+- ラベル: `High risk`
+
+### `components/premium/PremiumCompletePageClient.jsx`
+- 役割: 完了画面表示、`purchase_completed` 記録と `premiumAccess` 付与
+- ラベル: `High risk`
+
+### `components/premium/PremiumReadingPageClient.jsx`
+- 役割: 購入権限チェック、3枚結果表示、キャッシュ
 - ラベル: `High risk`
 
 ### `components/premium/PremiumCtaCard.jsx`
@@ -93,11 +133,35 @@
 
 ### `lib/session/oracleSession.js`
 - 役割: localStorage state管理
-- 主要: `selectedTheme`, `diagnosisType`, `lastResult`, `deepCount`, `premiumIntent`, `threeCardResult`
+- 主要: `diagnosisType`, `experimentContext`, `checkoutAttempt`, `premiumAccess`, `threeCardResult`
 - ラベル: `High risk`
 
 ### `lib/analytics/trackEvent.js`
 - 役割: イベント送信
+- ラベル: `Need caution`
+
+### `lib/analytics/eventDb.js`
+- 役割: SQLite接続と `events` テーブル初期化
+- ラベル: `High risk`
+
+### `lib/analytics/eventStore.js`
+- 役割: イベント記録、購入検証、集計ロジック
+- ラベル: `High risk`
+
+### `lib/analytics/events.js`
+- 役割: イベント名/PAGE名の契約
+- ラベル: `Need caution`
+
+### `lib/analytics/experiments.js`
+- 役割: LP ABテスト割り当てとmeta生成
+- ラベル: `Need caution`
+
+### `lib/api/adminAuth.js`
+- 役割: 集計APIのトークン認証
+- ラベル: `Need caution`
+
+### `lib/monetization/noteMap.js`
+- 役割: 診断タイプ別のnote URL解決・UTM組み立て
 - ラベル: `Need caution`
 
 ### `lib/ai/oracleMessage.js`

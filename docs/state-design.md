@@ -24,7 +24,14 @@
 
 ### `lastResult`
 - 用途: 1枚結果の全データ
-- 中身: `card`, `title`, `message`, `actionTip`, `afterglowLine`, `drawnAt`, `deepMessage` など
+- 中身: `card`, `title`, `message`, `actionTip`, `afterglowLine`, `drawnAt`, `ritualMeta`, `deepMessage` など
+- 変更タイミング: draw完了時
+
+#### `lastResult.ritualMeta`
+- 用途: draw演出のメタデータをresult演出で再利用する
+- 中身:
+  - `ritualMs`（draw演出〜遷移までの実測ミリ秒）
+  - `drawPhaseDoneAt`（draw完了時刻ISO文字列）
 - 変更タイミング: draw完了時
 
 ### `deepCount`
@@ -37,9 +44,25 @@
 - 値: `boolean`
 - 変更タイミング: result/deepからpremium導線押下時
 
+### `experimentContext`
+- 用途: LP ABテストの割り当て保持（trackEventに自動マージ）
+- 値: `{ enabled, experimentId, variant } | null`
+- 変更タイミング: `/` 初回表示時
+
+### `checkoutAttempt`
+- 用途: 外部決済の試行IDを保持
+- 値: `{ attemptId, source, createdAt } | null`
+- 変更タイミング: `/premium/intro` の購入ボタン押下時
+
+### `premiumAccess`
+- 用途: 購入完了済みのアクセス権
+- 値: `{ attemptId, source, grantedAt } | null`
+- 変更タイミング: `/premium/complete` で購入完了記録成功時
+
 ### `threeCardResult`
-- 用途: 将来の3枚結果保存枠（MVPでは未使用）
+- 用途: 3枚リーディング結果キャッシュ
 - 値: `object | null`
+- 変更タイミング: `/premium/reading` の生成成功時
 
 ## 画面ごとの利用
 
@@ -48,10 +71,13 @@
 /draw        diagnosisType を参照し /api/reading へ送信
 /result      lastResult を表示、premiumIntent を true にする
 /deep        deepCount を更新、premiumIntent を true にする
-/premium/... premiumIntent を参照可能（将来拡張）
+/premium/intro   checkoutAttempt を作る
+/premium/complete premiumAccess を付与
+/premium/reading premiumAccess を検証し threeCardResult を読む/作る
 ```
 
 ## 変更時の注意
 - キー名 `oracle_session_v1` を変えると既存データが読めなくなる
 - `deepCount` の上限（2）を壊すと回遊設計が崩れる
 - `diagnosisType` は `THEME_LABELS` と同じキー体系にする
+- `selectedTheme` は互換キーなので削除しない（`diagnosisType` に同値で保持）

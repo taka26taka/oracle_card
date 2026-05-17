@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { generateOracleMessage } from "../../../lib/ai/oracleMessage";
+import { normalizeDiagnosisType } from "../../../lib/domain/diagnosis";
 
 export async function POST(request) {
   try {
     const body = await request.json();
     const cardName = body?.cardName;
-    const theme = body?.theme;
-    const diagnosisType = body?.diagnosisType;
+    const theme = normalizeDiagnosisType(body?.theme || "", "");
+    const diagnosisType = normalizeDiagnosisType(body?.diagnosisType || "", "");
     const deepFocus = body?.deepFocus;
 
     if (!cardName) {
