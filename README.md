@@ -145,6 +145,7 @@ docs/
 
 - レビュー仕様書: `docs/review-spec.md`
 - スキル整理: `docs/skills.md`
+- 新規事業・コンペ整理: `docs/new-business-competition-plan.md`
 - プロジェクト全体マップ: `docs/project-map.md`
 - アーキテクチャ概要: `docs/architecture-overview.md`
 - システム全体像: `docs/system-overview.md`
