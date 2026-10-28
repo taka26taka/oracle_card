@@ -1,6 +1,6 @@
 # やさしいAIオラクルカード
 
-初心者向けのシンプルな 1 枚引きオラクルカードサイトです。  
+恋愛の迷いを短い言葉と具体的な行動に整理する、1枚引きオラクルカードサイトです。
 Next.js(App Router) で構築し、スマホ表示を前提に、余白を活かした軽いスピリチュアルトーンのUIで整えています。
 
 ポートフォリオとしては、単なる占い画面ではなく「LP -> 無料体験 -> 回遊 -> 購入導線 -> 計測 -> 改善」までを小さく閉じたプロダクトとして設計しています。AI生成、フォールバック、イベント分析、外部checkout想定の購入検証まで含めて、実運用に近い形を目指しました。
@@ -55,10 +55,10 @@ Next.js(App Router) で構築し、スマホ表示を前提に、余白を活か
 
 ## 技術スタック
 
-- Next.js 14 (App Router)
+- Next.js 15.5 (App Router)
 - React 18
 - Tailwind CSS (CDN版 `cdn.tailwindcss.com` を利用)
-- Node.js 18+ 推奨
+- Node.js 22+（CI: Node.js 22）
 - better-sqlite3 / SQLite
 - OpenAI Responses API
 
@@ -143,6 +143,8 @@ docs/
 
 ## ドキュメント
 
+設計判断と現在の制約は [2026年コードレビュー](docs/code-review-2026.md) を優先して参照してください。以下の資料は画面・運用別の補足です。
+
 - レビュー仕様書: `docs/review-spec.md`
 - スキル整理: `docs/skills.md`
 - 新規事業・コンペ整理: `docs/new-business-competition-plan.md`
@@ -210,6 +212,23 @@ npm run build
 npm run start
 ```
 
+## 品質検証
+
+```bash
+npm ci
+npm run lint
+npm test
+npm run build
+npm run test:integration
+npm audit --audit-level=high
+```
+
+GitHub Actionsで同じ検証を行います。単体テストはNode標準ランナー、React操作テストはVitest・React Testing Library・jsdomを利用し、外部APIはモックします。統合テストは一時SQLiteとテスト専用トークンを使い、OpenAIキーを空に固定するため実API課金はありません。既存のDBを変更しません。
+
+AI通信は最大8秒で中断し、失敗時は安全なフォールバックを返します。429のみ最大1回、Retry-Afterが500ms以内の場合に再試行します（ヘッダーなしは250ms）。重複課金の可能性があるネットワーク断・5xx・タイムアウトは再試行しません。POST本文の上限は16KiB、入力不正は400、サイズ超過は413で `{ error: コード }` を返します。
+
+最新の調査、設計判断、検証結果、残課題は [2026年コードレビュー](docs/code-review-2026.md) に記録しています。
+
 ## 統合テスト（スモーク）
 
 ```bash
@@ -270,12 +289,20 @@ curl -X POST "http://localhost:3000/api/purchase/webhook" \
   -d '{"attemptId":"attempt_xxx","sessionId":"s_xxx","success":true,"provider":"note","externalOrderId":"order_123","amount":1980}'
 ```
 
-## Vercel デプロイ
+## データ永続性と本番運用
+
+`/tmp` のSQLiteはデモ用です。Vercelの複数インスタンスでは同一DBが共有されず、再起動でデータを失う可能性があるため、購入履歴の正本として使用できません。
+
+実購入に使う場合は、永続ディスクを持つ単一のNodeホストで `EVENT_DB_PATH` を設定し、SQLiteのバックアップを取得してください。追加の有料クラウドサービスは必須ではありません。Webhookトークンと管理トークンを本番で設定し、購入プロバイダ側で署名・支払額・商品を検証したサーバーだけがWebhookを送信する構成が必要です。公開生成APIにはホスト側の回数制限とOpenAI側の予算制限を設定してください。
+
+localStorageの `premiumAccess` は画面用のヒントです。サーバーはDBの購入成功とattempt/sessionの組み合わせを照合し、保存値だけでは生成権限を認めません。
+
+## Vercel デプロイ（デモ用途）
 
 1. GitHub に push
 2. Vercel でこのリポジトリを Import
 3. Environment Variables に以下を設定
-   - `OPENAI_API_KEY` (必須)
+   - `OPENAI_API_KEY` (任意、未設定時はフォールバック)
    - `OPENAI_MODEL` (任意)
    - `OPENAI_MAX_OUTPUT_TOKENS` (任意)
    - `EVENT_DB_PATH` (任意, 例: `/tmp/oracle-events.sqlite`)
@@ -291,3 +318,13 @@ curl -X POST "http://localhost:3000/api/purchase/webhook" \
 
 - 機能追加は行わず、構成分離と運用しやすさを優先して整理しています。
 - カード画像は実ファイルを持たず、SVG を動的生成しています。
+
+## 設計上の判断と今後の改善
+
+- セッションはv1の保存キーと`selectedTheme`を維持し、正規化時に`diagnosisType`へ移行します。保存不可ならそのタブのメモリで継続します。再読み込み後の復元は保証できません。訪問日はブラウザの現地日付、日数差はUTC日番号で計算して夏時間の影響を避けます。
+- イベントの時刻はISO UTCへ正規化し、新規イベントの日付キーはAsia/Tokyoに固定します。CVは純粋関数、集計はSQLバインディングを用いるDB層へ分離しました。一般イベントの重複は件数に含め、購入イベントだけを冪等にします。ユーザー数はログイン人数ではなくsessionIdの異なり数です。
+- 購入処理はSQLiteの即時トランザクション内で所有者・期限・成功・重複・注文再利用を確認して保存します。固定トークンWebhookはデモ用の接続口で、決済プロバイダ固有の署名検証は未実装です。
+- Reactでは二重送信をrefで防ぎ、画面離脱時はfetchを中断します。購入完了の表示はサーバー検証の成功後に切り替えます。自動メモ化や共通フックは必要性が明確な箇所に限定しています。
+- Next.jsは重大な脆弱性対応のため14系から15.5.28へ更新しました。[公式セキュリティ情報](https://nextjs.org/blog/nextjs-security-update-october-14-2026) を参照しています。推移依存PostCSSは互換の8系修正版へoverrideし、ビルドで検証しています。
+- CIはlint、単体/Reactテスト、本番build、統合テスト、依存監査を実行します。自動デプロイやmainへの自動マージは設定していません。
+- 次の改善候補は、決済プロバイダの正式接続、ホストのレート制限、Tailwindのローカルビルド化、実ブラウザでのE2E/アクセシビリティ確認です。AIキャッシュは有効期限・購入結果の再利用ルールが必要なため今回は導入していません。

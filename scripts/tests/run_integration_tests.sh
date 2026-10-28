@@ -3,7 +3,13 @@ set -euo pipefail
 
 PORT="${1:-3101}"
 BASE_URL="http://127.0.0.1:${PORT}"
-LOG_FILE="/tmp/oracle-card-integration-test.log"
+TEST_DIR="$(mktemp -d /tmp/oracle-card-integration.XXXXXX)"
+LOG_FILE="${TEST_DIR}/server.log"
+# Never use real credentials or production analytics data in tests.
+export OPENAI_API_KEY=""
+export EVENT_DB_PATH="${TEST_DIR}/events.sqlite"
+export ANALYTICS_ADMIN_TOKEN="integration-admin-token"
+export PURCHASE_WEBHOOK_TOKEN="integration-webhook-token"
 
 cd "$(dirname "$0")/../.."
 
@@ -14,6 +20,7 @@ cleanup() {
   if kill -0 "${DEV_PID}" >/dev/null 2>&1; then
     kill "${DEV_PID}" >/dev/null 2>&1 || true
   fi
+  if [[ "${KEEP_TEST_ARTIFACTS:-0}" != "1" ]]; then rm -rf -- "${TEST_DIR}"; fi
 }
 trap cleanup EXIT
 

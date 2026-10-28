@@ -1,8 +1,4 @@
-import dynamic from "next/dynamic";
-
-const DeepPageClient = dynamic(() => import("../../components/deep/DeepPageClient"), {
-  ssr: false
-});
+import DeepPageClient from "../../components/deep/DeepPageClient";
 
 export default function DeepPage() {
   return <DeepPageClient />;

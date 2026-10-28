@@ -15,6 +15,7 @@ export default function PremiumReadingPageClient() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     const session = getSessionState();
     if (!session?.lastResult?.card?.id) {
       router.replace("/");
@@ -47,6 +48,7 @@ export default function PremiumReadingPageClient() {
       try {
         const res = await fetch("/api/premium/three-card", {
           method: "POST",
+          signal: controller.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             attemptId: premiumAttemptId,
@@ -87,6 +89,7 @@ export default function PremiumReadingPageClient() {
     load();
     return () => {
       active = false;
+      controller.abort();
     };
   }, [router]);
 
@@ -96,8 +99,8 @@ export default function PremiumReadingPageClient() {
         <p className="text-xs tracking-[0.2em] text-slate-500">PREMIUM READING</p>
         <h1 className="mt-2 font-serif-jp text-2xl text-slate-700">3枚で恋の流れを見る</h1>
 
-        {loading && <p className="mt-4 text-sm text-slate-500">3枚リーディングを生成しています...</p>}
-        {!loading && error && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-3 text-sm text-rose-600">{error}</p>}
+        {loading && <p role="status" className="mt-4 text-sm text-slate-500">3枚リーディングを生成しています...</p>}
+        {!loading && error && <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-3 text-sm text-rose-600">{error}</p>}
 
         {!loading && !error && result && (
           <>

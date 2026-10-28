@@ -225,3 +225,16 @@ NEXT_PUBLIC_EXPERIMENT_RESULT_CTA_COPY=1
 - Playwright による主要導線 E2E
 - AI出力のA/Bテストと勝ちパターン反映
 - 購入プロバイダ別の売上・CV分析
+
+
+## 2026年品質改善
+
+現行の責務と制約の詳細は [コードレビュー2026](code-review-2026.md) を参照。
+
+- `lib/api/request.js`: 上限付きJSON読み取りとAPI入力契約。400/413を固定のJSON error形式で通知。
+- `lib/domain/calendar.js`: 厳密な日付ラベルと日番号の純粋処理。セッションは現地カレンダー、分析はJST。
+- `lib/analytics/statistics.js`: SQLiteを参照しないCV計算。eventStoreは記録・照合・SQL集計。
+- `lib/ai/oracleMessage.js`: 8秒の総期限、切断signal、限定429再試行、構造検証と安全なフォールバック。
+- 購入イベントの確認と保存はSQLite immediate transactionで直列化。localStorageや戻りURLは支払証明ではない。
+- Webhookは共有トークンで認証するデモ接続口。プロバイダ署名・支払照合の正式接続と永続ストレージなしに本番課金の安全性を主張しない。
+- 実行環境はNode.js22、Next.js15.5、React18、JavaScriptを維持。CIは秘密情報と外部AI通信に依存しない。

@@ -1,3 +1,4 @@
+import { RequestError, readJson, validatePurchase } from "../../../../lib/api/request";
 import { NextResponse } from "next/server";
 import { recordEvent } from "../../../../lib/analytics/eventStore";
 import { EVENT_NAMES } from "../../../../lib/analytics/events";
@@ -7,7 +8,8 @@ const logPurchaseApi = (level, message, details = {}) => {
   const payload = {
     at: "api/purchase/complete",
     message,
-    ...details
+    event: details.event,
+    reason: details.reason
   };
   if (level === "error") {
     console.error(JSON.stringify(payload));
@@ -18,7 +20,8 @@ const logPurchaseApi = (level, message, details = {}) => {
 
 export async function POST(request) {
   try {
-    const body = await request.json();
+    const body = await readJson(request);
+    validatePurchase(body);
     const attemptId = body?.attemptId || "";
     const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
     if (!attemptId) {
@@ -79,9 +82,10 @@ export async function POST(request) {
     logPurchaseApi("info", "purchase_completed_recorded", { attemptId });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
+    if (error instanceof RequestError) return NextResponse.json({ error: error.message }, { status: error.status });
     logPurchaseApi("error", "invalid_request", {
-      errorMessage: error instanceof Error ? error.message : "unknown_error"
+      errorMessage: "storage_failure"
     });
-    return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

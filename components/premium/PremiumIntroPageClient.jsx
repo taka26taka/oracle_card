@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSessionState, startCheckoutAttempt } from "../../lib/session/oracleSession";
 import { trackEvent } from "../../lib/analytics/trackEvent";
@@ -14,13 +14,11 @@ const CHECKOUT_RETURN_PARAM = process.env.NEXT_PUBLIC_CHECKOUT_RETURN_PARAM || "
 export default function PremiumIntroPageClient() {
   const router = useRouter();
   const ready = Boolean(CHECKOUT_URL);
-  const session = useMemo(() => getSessionState(), []);
-  const reason = useMemo(() => {
-    if (typeof window === "undefined") return "";
-    return new URLSearchParams(window.location.search).get("reason") || "";
-  }, []);
+  const [reason, setReason] = useState("");
 
   useEffect(() => {
+    const session = getSessionState();
+    setReason(new URLSearchParams(window.location.search).get("reason") || "");
     if (!session?.lastResult?.card?.id) {
       router.replace("/");
       return;
@@ -31,7 +29,7 @@ export default function PremiumIntroPageClient() {
       theme: session.lastResult.theme,
       cardId: session.lastResult.card.id
     });
-  }, [router, session]);
+  }, [router]);
 
   const onCheckoutClick = () => {
     if (!ready) return;
@@ -82,6 +80,7 @@ export default function PremiumIntroPageClient() {
           </p>
         )}
 
+        <p className="mt-3 text-xs text-slate-500">購入連携はデモです。実際の決済事業者による検証は未接続です。</p>
         <PremiumDiffTable />
 
         <section className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/55 px-3 py-3">

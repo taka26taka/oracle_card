@@ -1,3 +1,4 @@
+import { RequestError, readJson, validateReading, validatePurchase } from "../../../../lib/api/request";
 import { NextResponse } from "next/server";
 import { generateOracleMessage } from "../../../../lib/ai/oracleMessage";
 import { ORACLE_CARDS } from "../../../../lib/cards";
@@ -21,7 +22,9 @@ const pickThreeUniqueCards = () => {
 
 export async function POST(request) {
   try {
-    const body = await request.json();
+    const body = await readJson(request);
+    validatePurchase(body);
+    validateReading(body, { premium: true });
     const attemptId = typeof body?.attemptId === "string" ? body.attemptId.trim() : "";
     const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
     if (!attemptId || !sessionId || !hasCompletedPurchaseAttempt(attemptId, sessionId)) {
@@ -38,6 +41,7 @@ export async function POST(request) {
           cardName: card.name,
           theme,
           diagnosisType,
+          signal: request.signal,
           apiKey: process.env.OPENAI_API_KEY
         })
       )
@@ -72,7 +76,8 @@ export async function POST(request) {
       },
       { status: 200 }
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof RequestError) return NextResponse.json({ error: error.message }, { status: error.status });
     return NextResponse.json({ error: "failed_to_generate_three_card" }, { status: 500 });
   }
 }

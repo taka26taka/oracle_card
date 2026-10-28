@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { pickRandomCard } from "../../lib/cards";
 import { generateViralTitle } from "../../lib/reading/generateViralTitle";
@@ -33,6 +33,8 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export default function DrawPage() {
   const router = useRouter();
   const [theme, setTheme] = useState("");
+  const pendingRequest = useRef(null);
+  useEffect(() => () => pendingRequest.current?.abort(), []);
   const [diagnosisType, setDiagnosis] = useState("");
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState("idle");
@@ -65,7 +67,9 @@ export default function DrawPage() {
   }, []);
 
   const handleDraw = async () => {
-    if (!theme || loading) return;
+    if (!theme || loading || pendingRequest.current) return;
+    const controller = new AbortController();
+    pendingRequest.current = controller;
     setLoading(true);
     const startedAt = Date.now();
     const reducedMotion =
@@ -81,6 +85,7 @@ export default function DrawPage() {
       try {
         const res = await fetch("/api/reading", {
           method: "POST",
+          signal: controller.signal,
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cardName: card.name, cardKey: card.key, theme, diagnosisType: diagnosisType || theme })
         });
@@ -124,16 +129,21 @@ export default function DrawPage() {
 
     setPhase("prelude");
     await wait(timings.prelude);
+    if (controller.signal.aborted) return;
     setPhase("summon");
     await wait(timings.summon);
+    if (controller.signal.aborted) return;
     setPhase("hold");
     await wait(timings.holdMin + Math.round(Math.random() * timings.holdRange));
+    if (controller.signal.aborted) return;
     setPhase("flipPrep");
     await wait(timings.flipPrep);
+    if (controller.signal.aborted) return;
     setPhase("flip");
     await wait(timings.flip);
 
     const result = await resultPromise;
+    if (controller.signal.aborted) return;
     const ritualMs = Date.now() - startedAt;
     result.ritualMeta = {
       ritualMs,

@@ -1,3 +1,4 @@
+import { RequestError, readJson, validatePurchase } from "../../../../lib/api/request";
 import { NextResponse } from "next/server";
 import { recordEvent } from "../../../../lib/analytics/eventStore";
 import { EVENT_NAMES } from "../../../../lib/analytics/events";
@@ -16,7 +17,8 @@ export async function POST(request) {
   }
 
   try {
-    const body = await request.json();
+    const body = await readJson(request);
+    validatePurchase(body);
     const attemptId = typeof body?.attemptId === "string" ? body.attemptId.trim() : "";
     const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim() : "";
     const success = body?.success === true;
@@ -62,7 +64,8 @@ export async function POST(request) {
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  } catch (error) {
+    if (error instanceof RequestError) return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }
