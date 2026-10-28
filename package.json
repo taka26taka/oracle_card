@@ -6,13 +6,31 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test:integration": "bash scripts/tests/run_integration_tests.sh"
+    "test:integration": "bash scripts/tests/run_integration_tests.sh",
+    "test": "npm run test:unit && npm run test:components",
+    "test:unit": "node --experimental-default-type=module --test tests/*.test.mjs",
+    "test:components": "vitest run",
+    "lint": "eslint . --max-warnings=0"
   },
   "dependencies": {
     "better-sqlite3": "^9.6.0",
-    "next": "14.2.32",
+    "next": "15.5.28",
     "react": "18.3.1",
     "react-dom": "18.3.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.23"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.28",
+    "jsdom": "^26.1.0",
+    "vitest": "^4.1.12"
   }
 }

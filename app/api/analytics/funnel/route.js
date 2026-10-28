@@ -1,20 +1,18 @@
+import { validateAnalyticsQuery } from "../../../../lib/api/request";
 import { NextResponse } from "next/server";
 import { getExperimentComparison, getFunnelStats } from "../../../../lib/analytics/eventStore";
 import { requireAdminToken } from "../../../../lib/api/adminAuth";
 
 const toDateText = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  if (typeof value === "string") return value;
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(value);
 };
 
 export async function GET(request) {
   const unauthorized = requireAdminToken(request);
   if (unauthorized) return unauthorized;
+  try { validateAnalyticsQuery(request.nextUrl.searchParams); }
+  catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }
 
   const dateFrom = toDateText(request.nextUrl.searchParams.get("date_from")) || toDateText(new Date());
   const dateTo = toDateText(request.nextUrl.searchParams.get("date_to")) || dateFrom;

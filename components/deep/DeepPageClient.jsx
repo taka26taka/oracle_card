@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildShareText, THEME_LABELS } from "../../lib/reading/viralCopy";
 import { getSessionState, setDeepResult, setPremiumIntent } from "../../lib/session/oracleSession";
@@ -24,6 +24,7 @@ const FOCUS_PREFIX = {
 export default function DeepPageClient() {
   const router = useRouter();
   const [result, setResult] = useState(null);
+  const pendingRequest = useRef(null);
   const [loading, setLoading] = useState(false);
   const [deepMessage, setDeepMessage] = useState("");
   const [deepCount, setDeepCount] = useState(0);
@@ -40,6 +41,8 @@ export default function DeepPageClient() {
     setDeepMessage(session.lastResult.deepMessage || "");
     setDeepCount(session.deepCount || 0);
   }, [router]);
+
+  useEffect(() => () => pendingRequest.current?.abort(), []);
 
   const limitReached = deepCount >= 2;
 
@@ -58,14 +61,17 @@ export default function DeepPageClient() {
   }, [deepMessage, result]);
 
   const openFocus = async (focus) => {
-    if (!result || loading || limitReached) return;
+    if (!result || loading || limitReached || pendingRequest.current) return;
 
+    const controller = new AbortController();
+    pendingRequest.current = controller;
     setLoading(true);
     let message = result.message;
 
     try {
       const res = await fetch("/api/reading", {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cardName: result.card.name,
@@ -80,6 +86,9 @@ export default function DeepPageClient() {
     } catch {
       // keep previous message
     }
+
+    if (controller.signal.aborted) return;
+    pendingRequest.current = null;
 
     const nextDeepMessage = `${FOCUS_PREFIX[focus]}${message}`;
     const next = setDeepResult({ deepMessage: nextDeepMessage, deepFocus: focus });
@@ -137,7 +146,7 @@ export default function DeepPageClient() {
         <p className="mt-3 text-xs text-slate-500">深掘り回数: {deepCount}/2</p>
         {limitReached && <p className="mt-1 text-xs text-rose-500">深掘りは2回までです。次は共有かもう1枚へ。</p>}
 
-        <p className="mt-4 min-h-24 rounded-xl bg-rose-50/45 px-3 py-3 text-sm leading-7 text-slate-600">
+        <p role="status" aria-live="polite" className="mt-4 min-h-24 rounded-xl bg-rose-50/45 px-3 py-3 text-sm leading-7 text-slate-600">
           {loading ? "深掘りメッセージを整えています..." : deepMessage || "上の項目を選ぶと、同じカードを恋愛文脈で再解釈します。"}
         </p>
 

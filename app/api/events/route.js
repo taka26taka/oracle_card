@@ -1,3 +1,4 @@
+import { RequestError, readJson, validateAnalyticsQuery } from "../../../lib/api/request";
 import { NextResponse } from "next/server";
 import { getDailyDashboardStats, recordEvent } from "../../../lib/analytics/eventStore";
 import { validateAndNormalizeEvent } from "../../../lib/analytics/eventValidation";
@@ -8,7 +9,8 @@ const logEventApi = (level, message, details = {}) => {
   const payload = {
     at: "api/events",
     message,
-    ...details
+    event: details.event,
+    reason: details.reason
   };
   if (level === "error") {
     console.error(JSON.stringify(payload));
@@ -30,8 +32,12 @@ const isTrustedAnalyticsRequest = (request) => {
   if (origin && origin !== expectedOrigin) {
     return false;
   }
-  if (referer && !referer.startsWith(expectedOrigin)) {
-    return false;
+  if (referer) {
+    try {
+      if (new URL(referer).origin !== expectedOrigin) return false;
+    } catch {
+      return false;
+    }
   }
 
   const hasContext = Boolean(origin || referer);
@@ -44,6 +50,8 @@ const isTrustedAnalyticsRequest = (request) => {
 export async function GET(request) {
   const unauthorized = requireAdminToken(request);
   if (unauthorized) return unauthorized;
+  try { validateAnalyticsQuery(request.nextUrl.searchParams); }
+  catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }
 
   const date = request.nextUrl.searchParams.get("date") || "";
   const stats = getDailyDashboardStats(date);
@@ -53,15 +61,13 @@ export async function GET(request) {
 export async function POST(request) {
   if (!isTrustedAnalyticsRequest(request)) {
     logEventApi("warn", "rejected_untrusted_request", {
-      origin: request.headers.get("origin") || "",
-      referer: request.headers.get("referer") || "",
-      secFetchSite: request.headers.get("sec-fetch-site") || ""
+      reason: "untrusted_origin"
     });
     return NextResponse.json({ error: "forbidden_request_origin" }, { status: 403 });
   }
 
   try {
-    const payload = await request.json();
+    const payload = await readJson(request);
     const validated = validateAndNormalizeEvent(payload);
     if (!validated.ok) {
       logEventApi("warn", "rejected_event_payload", { reason: validated.reason });
@@ -131,14 +137,15 @@ export async function POST(request) {
       path: body.path,
       theme: body.theme,
       cardId: body.cardId,
-      meta: body.meta || null
+      meta: undefined
     });
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
+    if (error instanceof RequestError) return NextResponse.json({ error: error.message }, { status: error.status });
     logEventApi("error", "failed_to_record_event", {
       reason: "failed_to_record_event",
-      errorMessage: error instanceof Error ? error.message : "unknown_error"
+      errorMessage: "storage_failure"
     });
     return NextResponse.json({ error: "failed_to_record_event" }, { status: 500 });
   }

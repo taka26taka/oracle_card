@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ensureSession,
@@ -12,43 +12,41 @@ import { trackEvent } from "../lib/analytics/trackEvent";
 import { EVENT_NAMES, PAGE_NAMES } from "../lib/analytics/events";
 import { getLpCopyExperiment, toExperimentMeta } from "../lib/analytics/experiments";
 
+const DIAGNOSIS_OPTIONS = [
+  {
+    key: "mutual",
+    label: "通じ合ってる気がする（両想い）",
+    hashTag: "#両想い",
+    title: "両想い",
+    description: "確信が持てない距離感を、やさしく言語化する"
+  },
+  {
+    key: "unrequited",
+    label: "片思い",
+    hashTag: "#片思い",
+    title: "片思い",
+    description: "今の一歩で、関係が進むかどうかを読む"
+  },
+  {
+    key: "reconciliation",
+    label: "復縁したい",
+    hashTag: "#復縁したい",
+    title: "復縁",
+    description: "戻れる可能性と、動くべきタイミングを探る"
+  },
+  {
+    key: "waiting_contact",
+    label: "連絡が来ない",
+    hashTag: "#連絡待ち",
+    title: "連絡待ち",
+    description: "沈黙の理由と、待つか動くかの判断を整える"
+  }
+];
+
 export default function Home() {
   const router = useRouter();
   const [diagnosisType, setDiagnosis] = useState("");
   const [experiment, setExperiment] = useState({ enabled: false, experimentId: "", variant: "" });
-  const diagnosisOptions = useMemo(
-    () => [
-      {
-        key: "mutual",
-        label: "通じ合ってる気がする（両想い）",
-        hashTag: "#両想い",
-        title: "両想い",
-        description: "確信が持てない距離感を、やさしく言語化する"
-      },
-      {
-        key: "unrequited",
-        label: "片思い",
-        hashTag: "#片思い",
-        title: "片思い",
-        description: "今の一歩で、関係が進むかどうかを読む"
-      },
-      {
-        key: "reconciliation",
-        label: "復縁したい",
-        hashTag: "#復縁したい",
-        title: "復縁",
-        description: "戻れる可能性と、動くべきタイミングを探る"
-      },
-      {
-        key: "waiting_contact",
-        label: "連絡が来ない",
-        hashTag: "#連絡待ち",
-        title: "連絡待ち",
-        description: "沈黙の理由と、待つか動くかの判断を整える"
-      }
-    ],
-    []
-  );
 
   useEffect(() => {
     const session = ensureSession();
@@ -88,7 +86,7 @@ export default function Home() {
     router.push(`/draw?diagnosisType=${encodeURIComponent(diagnosisType)}`);
   };
 
-  const activeDiagnosisLabel = diagnosisOptions.find((item) => item.key === diagnosisType)?.label || "";
+  const activeDiagnosisLabel = DIAGNOSIS_OPTIONS.find((item) => item.key === diagnosisType)?.label || "";
 
   const heroCopy =
     experiment.enabled && experiment.variant === "B"
@@ -108,12 +106,12 @@ export default function Home() {
           <div className="mt-5">
             <p className="mb-3 text-center text-xs tracking-[0.16em] text-indigo-100/85">直感で1枚、カードを選ぶ</p>
             <div role="radiogroup" aria-label="診断テーマ" className="grid grid-cols-2 gap-3">
-              {diagnosisOptions.map((item) => {
+              {DIAGNOSIS_OPTIONS.map((item) => {
                 const active = diagnosisType === item.key;
                 return (
                   <label
                     key={item.key}
-                    className={`group relative block cursor-pointer overflow-hidden rounded-[24px] border px-3 pb-3 pt-4 text-center transition duration-200 transform-gpu ${
+                    className={`group relative block cursor-pointer focus-within:ring-2 focus-within:ring-amber-300 overflow-hidden rounded-[24px] border px-3 pb-3 pt-4 text-center transition duration-200 transform-gpu ${
                       active
                         ? "border-amber-300/70 bg-[linear-gradient(170deg,#f6f1ea,#f3ecff)] shadow-[0_22px_60px_rgba(0,0,0,0.35)]"
                         : "border-amber-200/50 bg-[linear-gradient(170deg,#f6f1ea,#f3ecff)] shadow-[0_14px_34px_rgba(0,0,0,0.25)] hover:-translate-y-[6px] hover:scale-[1.01] hover:shadow-[0_22px_60px_rgba(0,0,0,0.35)]"
@@ -123,6 +121,7 @@ export default function Home() {
                       type="radio"
                       name="diagnosisType"
                       className="sr-only"
+                      aria-label={item.label}
                       checked={active}
                       onChange={() => handleDiagnosisSelect(item.key)}
                     />
