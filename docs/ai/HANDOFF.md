@@ -22,9 +22,8 @@
 ## 注意点・未解決
 - EVENT_DB_PATH=/tmp/... のため、Vercel 本番ではデータが永続しない（AGENTS.md 参照）。直すまで本番の課金は有効にしない。
 - NEXT_PUBLIC_NOTE_URL_* は note.com のトップを指すダミー値。
-- ローカル（WSL）: nvm 導入済み。oracle_card では `nvm use` で Node 22 になる。nvm の既定は system（apt の Node 18）のままなので、新しいシェルでは Node 18。作業前に必ず `nvm use` する。
-  2026-11-07 17:51 に `~/.npmrc`（`prefix=/home/takay/.npm-global`）ができてから、`nvm use` が「prefix と両立しない」で失敗し、Node 18 のままになる。
-  作成者は不明（Claude Code ではない）。対処（`nvm use --delete-prefix` で消すか、.npmrc を見直す）は本人判断待ち。それまでは `export PATH=$HOME/.nvm/versions/node/v22.23.4/bin:$PATH` で Node 22 にする。
+- ローカル（WSL）: nvm 導入済み。2026-11-07 に `nvm alias default 22` にしたので、新しいシェルでも Node 22 になる。oracle_card では念のため `nvm use` する。
+  `~/.npmrc` に `prefix=...` を書くと nvm が使えなくなる（2026-11-07 に Codex を npm -g で入れた際に発生し、削除済み）。グローバルの npm パッケージは nvm の Node 22 に入れる（codex-cli もここ）。
 - 結合テスト: ポート 3101 が使用中だと `port 3101 is already in use` で止まる。そのときは `ss -ltnp | grep 3101` で PID を確認して止める。
   `KEEP_TEST_ARTIFACTS=1` を付けると一時ディレクトリ（サーバーログ・テスト用DB）が残る。
 - 2026-11-04 の結合テスト1回目の 500 は、その後の実行（2026-11-07 に計5回）では再現していない。原因は未特定。再発したら、失敗時に表示されるサーバーログを見る。
@@ -45,3 +44,4 @@
 | 結合テストの異常系（手動） | ポート使用中 → exit 1 で停止 / Ctrl+C（SIGINT）→ exit 130、サーバー残りなし / 起動失敗（不正なポート）→ exit 1、サーバーログ末尾を表示、一時ディレクトリ削除 | 2026-11-07 |
 | T-0004（ドキュメントのみ）`npm run lint` / `npm test` | 成功（警告 0）/ 成功（unit 29 件、components 8 件）。test:integration・build はコード変更がないため未実行 | 2026-11-07 |
 | T-0004 r1 修正後 `npm run lint` / `npm test` | 成功（警告 0）/ 成功（unit 29 件、components 8 件）。`nvm use` が .npmrc の prefix で失敗したため PATH 指定で Node v22.23.4 を使用 | 2026-11-07 |
+| `nvm use`（.npmrc 削除後、新しいシェル）/ `npm run lint` / `npm test` | 成功（Node v22.23.4）/ 成功（警告 0）/ 成功（unit 29 件、components 8 件） | 2026-11-07 |
