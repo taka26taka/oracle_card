@@ -1,8 +1,8 @@
 # 2026-11-07 イベントDBの永続化先
 
-- 状態: 提案
-- 決めた人: 本人 / 提案: Claude Code
-- タスク: T-0004
+- 状態: 採用（条件付き。2026-11-07）
+- 決めた人: 本人（2026-11-07）/ 提案: Claude Code / セキュリティ評価: Codex
+- タスク: T-0004（比較・提案）、T-0005（採用と条件の追記）
 
 ## 背景
 イベントDBは better-sqlite3 で `EVENT_DB_PATH`（既定 `/tmp/oracle-events.sqlite`）に置いている。
@@ -46,7 +46,7 @@ Vercel では /tmp がインスタンスごとに別で永続しないため、�
 
 | 案 | データの持ち出し | 他のDBへ移すとき | ローカル開発・テスト | 既存テスト・CI への変更量 |
 |---|---|---|---|---|
-| A. Turso | `turso db export` で SQLite ファイルに書き出せる（最新の変更が入っていないことがあるので、切り替え時は書き込みを止めてから）。`turso db shell <db> .dump` で SQL ダンプも取れる | ダンプは素の SQLite の SQL なので、`sqlite3` に読み込めば今の better-sqlite3 構成や D1 へそのまま戻せる。Postgres へ移すときは C と同じ SQL の書き換えが要る | `@libsql/client` をローカルファイル（`file:`）に向ければネットワークなしで動く見込み（移行手順2で確認） | 小。テストは今と同じく一時ディレクトリの DB ファイルを使える。CI に外部サービスは不要 |
+| A. Turso | `turso db export` で SQLite ファイルに書き出せる（最新の変更が入っていないことがあり、書き込みを止めるだけでは最新になる保証がない。移行手順の「Turso から移るとき」を参照）。`turso db shell <db> .dump` で SQL ダンプも取れる | ダンプは素の SQLite の SQL なので、`sqlite3` に読み込めば今の better-sqlite3 構成や D1 へそのまま戻せる。Postgres へ移すときは C と同じ SQL の書き換えが要る | `@libsql/client` をローカルファイル（`file:`）に向ければネットワークなしで動く見込み（移行手順2で確認） | 小。テストは今と同じく一時ディレクトリの DB ファイルを使える。CI に外部サービスは不要 |
 | B. Cloudflare D1 | `wrangler d1 export <db> --remote --output=...` で SQL ファイルに書き出せる（スキーマのみ・データのみも可）。書き出し中は他のリクエストが止まる | SQLite 系の SQL なので SQLite / Turso へは移しやすい。Postgres / MySQL のダンプは D1 に取り込めない（逆方向は C と同じ書き換えが要る） | `wrangler dev` で Miniflare がローカル D1 を作る（`.wrangler/state` に保存）。Workers の外の Node から使うには `getPlatformProxy` でバインディングを再現する。どちらも本物の再現（エミュレーション）で、細かい違いがありうると公式に注記あり | 大。Vercel のままだとアプリは中継 Worker を HTTP で呼ぶ形になるので、unit テストは `getPlatformProxy` か DB アクセス部分の差し替えが要る。結合テストは Next.js と `wrangler dev`（中継 Worker）の2プロセスを起動・停止する形になる。CI にも wrangler の導入とローカル D1 の準備が要る |
 | C. Neon | `pg_dump` で書き出せる（プール経由ではなく直接接続で、Postgres のメジャーバージョンを合わせる）。持ち出した分は転送量に数えられる | 標準の Postgres なので、他の Postgres サービスへは移しやすい。SQLite 系（今の構成・A・B）へ戻すには SQL の書き換えが要る | ローカルにも Postgres が要る（Docker など） | 大。テストの DB の準備を Postgres 用に作り直す。CI に Postgres のサービスコンテナを追加する |
 
@@ -69,15 +69,54 @@ C は書き換え量とテスト環境のコストが、今の規模に見合わ
 - 無料枠を超えるとDBがブロックされる → 使用量を月1回確認する。課金を有効にする段階で Developer プラン（$5.99/月）への切り替えを判断する
 - HTTP 越しの書き込みトランザクションの遅さ（ロックのタイムアウト5秒）→ Preview 環境で Webhook と購入完了を実際に流して確認する
 
-## 移行手順（決定後。1タスク = 1PR）
+## 決定
+**Turso を条件付きで採用する**（本人、2026-11-07）。
+
+採用前に Codex が DB まわりのコードとこの記録をセキュリティ観点で評価し、「条件付きで採用可」と判定した（high 6・medium 6）。
+全文は [docs/security/2026-11-07-turso-security-review.md](../security/2026-11-07-turso-security-review.md)。以下の # は評価の指摘番号。
+
+- 採用の理由: 推奨の理由（上記）は評価後も変わらない。D1 は batch だけでは今の「確認してから書く」処理と同等にならず、Neon も UNIQUE 制約やロックの再設計が要るため、Turso が一番変更を小さくできる
+- 条件: 下の (a) を移行手順の中で満たすこと。本番で課金を始めるのは、(a)(b) の high をすべて解消し、監視・再送・復旧の手順を Preview で確かめてから
+
+### (a) Turso への移行で必要になるもの
+| # | 重要度 | 内容 | 対応する段階 |
+|---|---|---|---|
+| 1 | high | 「確認 → INSERT」は同じトランザクションオブジェクトで行い、`commit` を `await` する。早く return したときや失敗したときも rollback / close する。トランザクションの中で外部 API を呼ばない。HTTP の往復とロックのタイムアウト5秒で失敗が増える可能性がある | 2（実装）・3（実地確認） |
+| 2 | high | async 化で `await` を忘れると Promise が truthy になり、未購入でも3枚リーディングが通る（`premium/three-card` の購入確認、eventStore 内部の `Boolean(row)` など）。結果が `true` のときだけ許可する書き方にし、未購入・別セッション・照合の失敗・遅れた Promise で生成処理が呼ばれないテストを入れる | 1・2 |
+| 5 | high | Turso のトークンは既定で全権限・無期限。本番と Preview で DB とトークンを分け、DB 単位・期限付きのトークンにする。サーバーの環境変数だけに置き、`NEXT_PUBLIC_*` やログに出さない。集計は読み取り専用トークンに分ける | 3 |
+| 6 | medium | 新しいトークンを発行しても古いものは残る。失効（invalidate）は他のトークンにも影響する。期限・更新・漏れたときの「失効 → 再発行 → 再デプロイ」の手順を決める | 3 |
+| 9 | medium | 保存時の暗号化は公式に記載あり。保存地域（primary・replica・バックアップ）を確かめて記録し、TLS と証明書の検証を必須にする | 3 |
+| 11 | high | 購入記録が消えると、買った人が使えなくなる。許容できるデータ損失の時間と復旧時間を決め、PITR（時点復元）と独立したバックアップ、決済側の記録との突き合わせを用意する。復元の練習をする | 3・4 |
+| 12 | medium | `@libsql/client` のパッケージ名・配布元・推移依存・install script・ネイティブ依存・脆弱性を確かめ、lockfile で固定する。Node 版と `/web` 版で `file:` 対応が違う点に注意 | 2 |
+
+### (b) DB に関係なく今のコードにあるもの（移行とは別のタスク候補）
+| # | 重要度 | 内容 |
+|---|---|---|
+| 3 | high | 期限（48時間）の確認が重複の確認より先にあるため、記録済みの購入が期限後に再送されると 400 になる。期限内に記録できなかった購入を自動で回復できない |
+| 10 | high | 3枚リーディングの許可は purchase_success を見ている。DB が使えないときの方針がない。購入を確認できないときは生成・OpenAI 呼び出しをせず 503 を返す（fail closed）。Webhook は保存を確かめる前に 2xx を返さない。一般の計測が失敗しても基本機能は止めない |
+| 4 | medium | 二重記録を防いでいるのは排他トランザクションだけで、UNIQUE 制約がない。注文 ID の検索は JSON 抽出で専用のインデックスがない |
+| 7 | medium | イベント投稿 API の Origin 確認は認証ではなく、アクセス数の制限もない。書き込み枠やロックを食われると購入処理にも響く |
+| 8 | medium | `user_id` と `session_id` が同じ値で、時刻・path・テーマ・注文 ID と結びつく仮名のデータ。`meta_json` は検証後の meta をそのまま保存する。保存する項目の許可リストと、計測と購入記録で分けた保持期間を決める |
+
+評価では確認しきれなかったこともある（入力検証の全体、決済プロバイダーの署名・金額の照合、Turso の契約プランでの PITR 期間など）。全文の「確認できなかったこと」を参照。
+
+## 移行手順（1タスク = 1PR）
 1. **eventStore の async 化**（DB は better-sqlite3 のまま）: eventStore の export を async にし、6ルートで `await` する。テストを async に合わせる。動作は変えない
+   - 追加（#2）: 6ルートだけでなく eventStore 内部のヘルパーや比較集計まで含めた `await` の一覧を作る。購入確認は結果が `true` のときだけ許可する。未購入・別セッション・DB の例外で許可されないテストを必須にする。better-sqlite3 の同期トランザクションのコールバック自体は async にしない
 2. **`@libsql/client` への置き換え**: better-sqlite3 → `@libsql/client`（依存の追加は事前承認）。`EVENT_DB_URL`（ローカル・テストは `file:...`）と `EVENT_DB_AUTH_TOKEN` を導入し、`.env.example` にダミー値を入れる。`recordEvent` は `transaction("write")` に置き換える。テストと結合テストはローカルファイルのまま通す。`file:` で `transaction("write")` が使えるかはこのタスクで確かめる
+   - 追加（#1・#4・#12）: 確認と INSERT を同じトランザクションにまとめ、`commit` を待つ。すべての経路で rollback / close する。UNIQUE 制約（attempt ごと、provider＋注文 ID）を足す前に既存の重複を調べる。依存を監査する。`busy_timeout` は Turso では効かないので、ローカルの設定を引き継いだつもりにしない
 3. **Turso の準備と Preview での確認**（本人作業を含む）: Turso のアカウント作成と DB 作成（外部サービスの契約なので本人が行う）、Vercel の環境変数を設定。Preview で購入フロー（checkout → Webhook → 3枚リーディング）を流して確認する
+   - 追加（#1・#5・#6・#9・#11）: 本番とは別の DB とトークンで行う。同時に届く Webhook、同じ注文 ID の別 attempt、5秒超え、commit の応答が返らない場合、期限後の再送、DB がブロックされた状態、トークンの失効を確かめる。保存地域・トークンの権限・バックアップからの復元も確かめる
 4. **AGENTS.md と HANDOFF の「既知の問題」を更新**し、本番で課金を有効にするかを判断する
+   - 追加: 開始の条件は (a)(b) の high の解消と、監視・再送・復旧の手順を確かめたこと。一般計測と購入記録の保持期間を記録する。使用量とエラーの監視は月1回より早い間隔にする
+
+(b) は移行と並行して別タスクにする。#3 と #10 は購入まわりの high なので先に行う候補。
+
+**Turso から移るとき**（T-0004 r2 の指摘）: `turso db export` のファイルには最新の変更が入っていないことがあり、書き込みを止めるだけでは最新になる保証がない。公式の案内どおり export 後に SDK で同期して最新か確かめるか、書き込みを止めたあとに `turso db shell <db> .dump` で取ったダンプを使う。どちらの場合も、移した先で購入記録の件数と最新の行を元の DB と突き合わせてから切り替える
 
 ## 影響
 - 変わるファイル（実装時）: `lib/analytics/eventDb.js`、`lib/analytics/eventStore.js`、上記6ルート、`tests/eventStore.test.mjs`、`scripts/tests/run_integration_tests.sh`、`package.json`、`.env.example`、AGENTS.md
-- 運用: Turso の使用量の確認（月1回）、トークンの管理（Vercel の環境変数のみ。コミットしない）
+- 運用: Turso の使用量とエラーの監視（月1回より早い間隔。#10）、トークンの管理（Vercel のサーバー用環境変数のみ。コミットしない。期限と失効手順は #5・#6）、バックアップと復元の確認（#11）
 - 費用: 当面 0円。無料枠を超えたら月 $5.99 程度
 
 ## 出典（2026-11-07 確認）
@@ -97,3 +136,4 @@ C は書き換え量とテスト環境のコストが、今の規模に見合わ
 - Wrangler API（getPlatformProxy）: https://developers.cloudflare.com/workers/wrangler/api/
 - D1 のインポートとエクスポート: https://developers.cloudflare.com/d1/best-practices/import-export-data/
 - Neon の pg_dump / pg_restore: https://neon.com/docs/import/migrate-from-postgres
+- セキュリティ評価（Codex、2026-11-07）とその中の出典: [docs/security/2026-11-07-turso-security-review.md](../security/2026-11-07-turso-security-review.md)

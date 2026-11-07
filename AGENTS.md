@@ -30,7 +30,10 @@ npm run build
 ## 既知の問題
 - EVENT_DB_PATH が /tmp の SQLite を指している。Vercel では /tmp がインスタンスごとに別で永続しないため、
   本番ではイベントと購入記録（Webhook → purchase_completed の照合）が失われる可能性がある。
-  本番で課金を有効にする前に永続DBへの移行が必要。方針を decisions/ に記録してから実装する。
+  本番で課金を有効にする前に永続DBへの移行が必要。移行先は Turso に決定（条件付き、2026-11-07）。
+  手順と採用条件は docs/decisions/2026-11-07-event-db-persistence.md、セキュリティ評価は docs/security/2026-11-07-turso-security-review.md。
+- 購入まわりの既知の問題（DB に関係なく今ある。課金開始前に直す）: 期限後の再送が 400 になる、DB 停止時の fail closed がない、
+  UNIQUE 制約なし、イベント投稿 API のレート制限なし、meta_json の保存範囲・保持期間が未定。詳細は上記の決定記録の (b)。
 - NEXT_PUBLIC_NOTE_URL_* は note.com トップを指すダミー値。
 
 ## 現在の状態
