@@ -41,6 +41,18 @@ Vercel では /tmp がインスタンスごとに別で永続しないため、�
 | B. Cloudflare D1 | SQLite 互換。無料枠が大きい（読み 500万行/日、書き 10万行/日、5GB）。egress 無料 | Vercel から直接使えない。REST API は管理用途向けで、アプリから使うには D1 を中継する Worker を別に作ってデプロイし、認証を付ける必要がある。対話的トランザクション（BEGIN〜COMMIT）を使えるかは公式ドキュメントで未確認（使えない場合は batch による一括実行になり、購入チェックの作り直しが必要）。無料枠は 2026-09-01 から日次上限で止まる | 無料（上限側の 5万行/日 は書き込み枠 10万行/日 の半分）。有料は Workers Paid 最低 $5/月 |
 | C. Neon（Postgres） | 本格的な RDB で、伸びても困らない。WebSocket（Pool）なら対話的トランザクションが使える。scale to zero でアイドル時は課金なし | SQL の書き換えが必要（`json_extract` → `->>`、`datetime('now')` → `now()`、`AUTOINCREMENT` → identity、`PRAGMA` を使った移行の作り直し）。ローカルのテストにも Postgres（Docker など）が要り、テストと CI の準備が重くなる。無料のストレージは1プロジェクト 1GB で、上限側の見積もりだと1年ほどで足りなくなる | 無料（100 CU 時間/月、1GB/プロジェクト）。有料は従量（$0.106/CU 時間、$0.35/GB 月） |
 
+### 乗り換えやすさ・ローカル開発とテスト
+（レビュー T-0004 r1 の指摘1を受けて追記。2026-11-07 に公式ドキュメントで確認）
+
+| 案 | データの持ち出し | 他のDBへ移すとき | ローカル開発・テスト | 既存テスト・CI への変更量 |
+|---|---|---|---|---|
+| A. Turso | `turso db export` で SQLite ファイルに書き出せる（最新の変更が入っていないことがあるので、切り替え時は書き込みを止めてから）。`turso db shell <db> .dump` で SQL ダンプも取れる | ダンプは素の SQLite の SQL なので、`sqlite3` に読み込めば今の better-sqlite3 構成や D1 へそのまま戻せる。Postgres へ移すときは C と同じ SQL の書き換えが要る | `@libsql/client` をローカルファイル（`file:`）に向ければネットワークなしで動く見込み（移行手順2で確認） | 小。テストは今と同じく一時ディレクトリの DB ファイルを使える。CI に外部サービスは不要 |
+| B. Cloudflare D1 | `wrangler d1 export <db> --remote --output=...` で SQL ファイルに書き出せる（スキーマのみ・データのみも可）。書き出し中は他のリクエストが止まる | SQLite 系の SQL なので SQLite / Turso へは移しやすい。Postgres / MySQL のダンプは D1 に取り込めない（逆方向は C と同じ書き換えが要る） | `wrangler dev` で Miniflare がローカル D1 を作る（`.wrangler/state` に保存）。Workers の外の Node から使うには `getPlatformProxy` でバインディングを再現する。どちらも本物の再現（エミュレーション）で、細かい違いがありうると公式に注記あり | 大。Vercel のままだとアプリは中継 Worker を HTTP で呼ぶ形になるので、unit テストは `getPlatformProxy` か DB アクセス部分の差し替えが要る。結合テストは Next.js と `wrangler dev`（中継 Worker）の2プロセスを起動・停止する形になる。CI にも wrangler の導入とローカル D1 の準備が要る |
+| C. Neon | `pg_dump` で書き出せる（プール経由ではなく直接接続で、Postgres のメジャーバージョンを合わせる）。持ち出した分は転送量に数えられる | 標準の Postgres なので、他の Postgres サービスへは移しやすい。SQLite 系（今の構成・A・B）へ戻すには SQL の書き換えが要る | ローカルにも Postgres が要る（Docker など） | 大。テストの DB の準備を Postgres 用に作り直す。CI に Postgres のサービスコンテナを追加する |
+
+まとめ: A と B は SQLite 系どうしで行き来しやすく、今の構成にも戻せる。C は移った後の乗り換えは楽だが、移るときの書き換えが一番大きい。
+ローカル開発とテストの手間は A が一番小さい。B は Vercel のままだと中継 Worker のぶん、テストと CI の準備が増える。
+
 検討から外したもの: SQLite ファイルのままホスティングを VPS や永続ボリュームのある環境へ移す案。ホスティングの変更はこのタスクの範囲外なので比較していない。
 
 ## 推奨（決定は本人）
@@ -78,3 +90,10 @@ C は書き換え量とテスト環境のコストが、今の規模に見合わ
 - D1 無料枠の日次上限の適用（2026-09-01）: https://developers.cloudflare.com/changelog/post/2026-09-01-d1-free-tier-limit-enforcement/
 - Neon 料金: https://neon.com/pricing
 - Neon serverless driver（HTTP と WebSocket、トランザクション）: https://neon.com/docs/serverless/serverless-driver
+- Turso db export: https://docs.turso.tech/cli/db/export
+- Turso db shell（.dump）: https://docs.turso.tech/cli/db/shell
+- Turso ローカル開発: https://docs.turso.tech/local-development
+- D1 ローカル開発: https://developers.cloudflare.com/d1/best-practices/local-development/
+- Wrangler API（getPlatformProxy）: https://developers.cloudflare.com/workers/wrangler/api/
+- D1 のインポートとエクスポート: https://developers.cloudflare.com/d1/best-practices/import-export-data/
+- Neon の pg_dump / pg_restore: https://neon.com/docs/import/migrate-from-postgres
